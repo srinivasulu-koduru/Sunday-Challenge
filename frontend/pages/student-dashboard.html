@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sunday Challenge - Student Dashboard">
+  <title>Student Dashboard — Sunday Challenge</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <!-- Header Navigation -->
+  <header>
+    <nav class="navbar" aria-label="Main Navigation">
+      <a href="../index.html" class="brand">
+        <div class="brand-icon">SC</div>
+        <div class="brand-title">Sunday <span>Challenge</span></div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="../index.html" class="nav-link">Home</a></li>
+        <li><a href="student-dashboard.html" class="nav-link active">Student</a></li>
+        <li><a href="admin-dashboard.html" class="nav-link">Admin / T&amp;P</a></li>
+        <li><a href="exam.html" class="nav-link">Exams</a></li>
+        <li><a href="result.html" class="nav-link">Results</a></li>
+      </ul>
+
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span class="stage-badge">Stage 2 Active</span>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.4rem 0.9rem; font-size: 0.85rem;">
+          Logout
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Dashboard Container -->
+  <main class="container">
+    
+    <!-- User Profile Hero Card -->
+    <section class="card" id="user-profile-card">
+      <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+        
+        <!-- Profile Picture Avatar -->
+        <div style="position: relative;">
+          <img id="user-avatar" src="https://via.placeholder.com/96" alt="Profile Picture" style="width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-primary); box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);" />
+          <span id="role-pill" class="status-pill online" style="position: absolute; bottom: -5px; right: -5px; font-size: 0.7rem; padding: 0.2rem 0.6rem;">
+            STUDENT
+          </span>
+        </div>
+
+        <!-- User Information Text -->
+        <div style="flex: 1; min-width: 250px;">
+          <div style="color: var(--accent-cyan); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.25rem;">
+            Authenticated Student Account
+          </div>
+          <h1 id="user-welcome-name" style="font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800; margin-bottom: 0.25rem;">
+            Welcome, Loading...
+          </h1>
+          <p id="user-email" style="color: var(--text-muted); font-size: 0.95rem;">
+            Loading email...
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Student Dashboard Modules Overview -->
+    <section>
+      <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; margin-bottom: 1rem;">Student Modules</h2>
+      
+      <div class="grid">
+        <div class="feature-card">
+          <div class="feature-icon">👤</div>
+          <div class="feature-title">Profile Authentication</div>
+          <div class="feature-desc">Authenticated via Google OAuth 2.0. Account details verified in MySQL database.</div>
+          <span class="feature-status active">VERIFIED</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📝</div>
+          <div class="feature-title">My Exams &amp; Tests</div>
+          <div class="feature-desc">Scheduled aptitude, reasoning, and coding assessments.</div>
+          <span class="feature-status upcoming">STAGE 3 &amp; 4</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">Performance Analytics</div>
+          <div class="feature-desc">Individual test breakdown, score reports, and class leaderboards.</div>
+          <span class="feature-status upcoming">STAGE 7</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>Sunday Challenge Platform — Student Dashboard (Stage 2 Google OAuth Active)</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const welcomeName = document.getElementById('user-welcome-name');
+      const userEmail = document.getElementById('user-email');
+      const userAvatar = document.getElementById('user-avatar');
+      const rolePill = document.getElementById('role-pill');
+      const logoutBtn = document.getElementById('logout-btn');
+
+      const ME_API_URL = 'http://localhost:8080/api/user/me';
+      const LOGOUT_URL = 'http://localhost:8080/logout';
+
+      try {
+        // Fetch authenticated user profile with credentials: 'include'
+        const response = await fetch(ME_API_URL, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' },
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const user = await response.json();
+          welcomeName.textContent = `Welcome, ${user.name || 'Student'}`;
+          userEmail.textContent = user.email || '';
+          if (user.profileImage) {
+            userAvatar.src = user.profileImage;
+          } else {
+            userAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=6366f1&color=fff`;
+          }
+          rolePill.textContent = user.role || 'STUDENT';
+        } else if (response.status === 401) {
+          // Redirect unauthenticated user to login page
+          window.location.href = 'login.html';
+        } else {
+          throw new Error(`Unexpected status ${response.status}`);
+        }
+      } catch (error) {
+        console.warn('Authentication check failed:', error);
+        // Fallback for unauthenticated / error state
+        welcomeName.textContent = 'Welcome, Guest';
+        userEmail.textContent = 'Please log in to access your student dashboard.';
+      }
+
+      // Logout button click handler
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+          window.location.href = LOGOUT_URL;
+        });
+      }
+    });
+  </script>
+</body>
+</html>
