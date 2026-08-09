@@ -7,6 +7,7 @@ import com.sundaychallenge.dto.ChallengeSummaryResponse;
 import com.sundaychallenge.dto.StartChallengeResponse;
 import com.sundaychallenge.dto.SubmitChallengeRequest;
 import com.sundaychallenge.dto.SubmitChallengeResponse;
+import com.sundaychallenge.dto.UserAttemptSummaryResponse;
 import com.sundaychallenge.dto.UserStatsResponse;
 import com.sundaychallenge.entity.Challenge;
 import com.sundaychallenge.entity.ChallengeQuestion;
@@ -114,6 +115,38 @@ class ChallengeServiceTest {
         var qResp = response.questions().get(0);
         assertEquals(q1.getQuestionText(), qResp.questionText());
         assertEquals(q1.getOptionA(), qResp.optionA());
+    }
+
+    @Test
+    void startAndSubmit_ShouldCreateSingleAttemptAndTransitionToCompleted() {
+        // Step 1: START creates exactly ONE IN_PROGRESS attempt
+        StartChallengeResponse startResp = challengeService.startChallenge(testChallenge.getId(), testUser);
+        Long attemptId = startResp.attemptId();
+        assertNotNull(attemptId);
+
+        List<UserAttemptSummaryResponse> historyAfterStart = challengeService.getUserAttempts(testUser);
+        assertEquals(1, historyAfterStart.size());
+        assertEquals(AttemptStatus.IN_PROGRESS, historyAfterStart.get(0).status());
+
+        // Calling start again while IN_PROGRESS reuses the same attempt
+        StartChallengeResponse repeatStart = challengeService.startChallenge(testChallenge.getId(), testUser);
+        assertEquals(attemptId, repeatStart.attemptId());
+        assertEquals(1, challengeService.getUserAttempts(testUser).size());
+
+        // Step 2: SUBMIT same attemptId updates that attempt to COMPLETED
+        SubmitChallengeRequest submitReq = new SubmitChallengeRequest(
+                attemptId,
+                Map.of(q1.getId(), "B", q2.getId(), "C")
+        );
+        SubmitChallengeResponse submitResp = challengeService.submitChallenge(testChallenge.getId(), submitReq, testUser);
+        assertEquals(attemptId, submitResp.attemptId());
+        assertEquals(AttemptStatus.COMPLETED, submitResp.status());
+
+        // Step 3: History shows EXACTLY ONE COMPLETED attempt record
+        List<UserAttemptSummaryResponse> historyAfterSubmit = challengeService.getUserAttempts(testUser);
+        assertEquals(1, historyAfterSubmit.size());
+        assertEquals(attemptId, historyAfterSubmit.get(0).attemptId());
+        assertEquals(AttemptStatus.COMPLETED, historyAfterSubmit.get(0).status());
     }
 
     @Test

@@ -164,15 +164,25 @@
       const timerDisplay = document.getElementById('timer-display');
 
       /**
-       * Fetch attempt questions
+       * Fetch questions for the existing attempt created by start
        */
       async function initQuiz() {
         try {
-          const response = await fetch(`${API_BASE_URL}/api/challenges/${challengeId}/start`, {
-            method: 'POST',
+          // Fetch existing attempt questions without creating another attempt
+          let response = await fetch(`${API_BASE_URL}/api/challenges/${challengeId}/attempt/${attemptId}`, {
+            method: 'GET',
             headers: { 'Accept': 'application/json' },
             credentials: 'include'
           });
+
+          // Fallback to start endpoint if needed (which reuses in-progress attempt safely)
+          if (!response.ok && response.status !== 401) {
+            response = await fetch(`${API_BASE_URL}/api/challenges/${challengeId}/start`, {
+              method: 'POST',
+              headers: { 'Accept': 'application/json' },
+              credentials: 'include'
+            });
+          }
 
           if (response.ok) {
             const data = await response.json();
