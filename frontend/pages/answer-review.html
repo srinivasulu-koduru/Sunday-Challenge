@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sunday Challenge — Answer Review">
+  <title>Answer Review — Sunday Challenge</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading answer review...</div>
+  </div>
+
+  <!-- Header Navigation -->
+  <header>
+    <nav class="navbar" aria-label="Main Navigation">
+      <a href="../index.html" class="brand">
+        <div class="brand-icon">SC</div>
+        <div class="brand-title">Sunday <span>Challenge</span></div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="../index.html" class="nav-link">Home</a></li>
+        <li><a href="student-dashboard.html" class="nav-link">Dashboard</a></li>
+        <li><a href="challenges.html" class="nav-link">Challenges</a></li>
+        <li><a href="my-results.html" class="nav-link active">My Results</a></li>
+      </ul>
+
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span class="stage-badge">Stage 4 Active</span>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
+          Logout
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container" style="max-width: 850px;">
+
+    <div style="margin-bottom: 1.5rem;">
+      <a id="back-result-link" href="#" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+        ← Back to Result Summary
+      </a>
+    </div>
+
+    <!-- Header Hero -->
+    <section class="hero" style="text-align: left; margin-bottom: 2rem;">
+      <div class="hero-subtitle">Post-Submission Breakdown</div>
+      <h1 class="hero-title">Answer Review</h1>
+      <p class="hero-desc" style="margin: 0;">
+        Review your responses alongside correct answers and detailed explanations.
+      </p>
+    </section>
+
+    <!-- Review Cards Container -->
+    <div id="review-container">
+      <!-- Review cards dynamically rendered via JS -->
+    </div>
+
+  </main>
+
+  <footer>
+    <p>Sunday Challenge Platform — Stage 4 Challenge System</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const API_BASE_URL = 'http://localhost:8080';
+      const urlParams = new URLSearchParams(window.location.search);
+      const attemptId = urlParams.get('attemptId');
+      const challengeId = urlParams.get('challengeId');
+
+      if (!attemptId || !challengeId) {
+        window.location.href = 'student-dashboard.html';
+        return;
+      }
+
+      const loadingOverlay = document.getElementById('loading-overlay');
+      const reviewContainer = document.getElementById('review-container');
+      const backResultLink = document.getElementById('back-result-link');
+      const logoutBtn = document.getElementById('logout-btn');
+
+      backResultLink.href = `challenge-result.html?attemptId=${attemptId}&challengeId=${challengeId}`;
+
+      async function fetchReview() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/challenges/${challengeId}/result/${attemptId}/review`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            credentials: 'include'
+          });
+
+          if (response.ok) {
+            const list = await response.json();
+            renderReviewList(list);
+          } else if (response.status === 401) {
+            window.location.href = 'login.html';
+          } else {
+            alert('Unable to load answer review.');
+            window.location.href = `challenge-result.html?attemptId=${attemptId}&challengeId=${challengeId}`;
+          }
+        } catch (err) {
+          console.error('Error fetching review:', err);
+          alert('Network error while loading review.');
+        } finally {
+          if (loadingOverlay) {
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => { loadingOverlay.style.display = 'none'; }, 300);
+          }
+        }
+      }
+
+      function renderReviewList(list) {
+        if (!list || list.length === 0) {
+          reviewContainer.innerHTML = '<div class="empty-state">No questions found for review.</div>';
+          return;
+        }
+
+        reviewContainer.innerHTML = list.map((item, idx) => {
+          const isCorrect = item.correct;
+          const isUnanswered = !item.selectedOption;
+
+          let statusBadge = isCorrect 
+            ? '<span class="badge-tag easy">✅ Correct (+' + item.pointsEarned + ' pts)</span>'
+            : (isUnanswered ? '<span class="badge-tag medium">⏳ Unanswered (0 pts)</span>' : '<span class="badge-tag hard">❌ Incorrect (0 pts)</span>');
+
+          return `
+            <div class="card" style="margin-bottom: 1.5rem;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <span class="badge-tag">Question ${item.questionOrder || (idx + 1)}</span>
+                ${statusBadge}
+              </div>
+
+              <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 700; margin-bottom: 1.25rem;">
+                ${item.questionText}
+              </h3>
+
+              <div class="option-list" style="margin-bottom: 1.25rem;">
+                ${renderOptionRow('A', item.optionA, item.selectedOption, item.correctOption)}
+                ${renderOptionRow('B', item.optionB, item.selectedOption, item.correctOption)}
+                ${renderOptionRow('C', item.optionC, item.selectedOption, item.correctOption)}
+                ${renderOptionRow('D', item.optionD, item.selectedOption, item.correctOption)}
+              </div>
+
+              ${item.explanation ? `
+                <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: var(--radius-md); padding: 1rem 1.25rem; font-size: 0.9rem;">
+                  <strong style="color: #a5b4fc; display: block; margin-bottom: 0.25rem;">💡 Explanation:</strong>
+                  <span style="color: var(--text-muted);">${item.explanation}</span>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+
+      function renderOptionRow(optLetter, optText, selectedOpt, correctOpt) {
+        const isSelected = selectedOpt === optLetter;
+        const isCorrectOpt = correctOpt === optLetter;
+
+        let extraClass = '';
+        if (isCorrectOpt) {
+          extraClass = 'correct-answer';
+        } else if (isSelected && !isCorrectOpt) {
+          extraClass = 'wrong-answer';
+        }
+
+        return `
+          <div class="option-card ${extraClass}" style="cursor: default;">
+            <div class="option-badge">${optLetter}</div>
+            <div style="flex: 1; font-size: 0.925rem;">
+              ${optText}
+              ${isSelected ? '<strong style="margin-left: 0.5rem; font-size: 0.8rem; color: var(--accent-cyan);">(Your Answer)</strong>' : ''}
+              ${isCorrectOpt ? '<strong style="margin-left: 0.5rem; font-size: 0.8rem; color: #6ee7b7;">(Correct Answer)</strong>' : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.location.href = `${API_BASE_URL}/logout`;
+        });
+      }
+
+      await fetchReview();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sunday Challenge — Available Challenges">
+  <title>Challenges — Sunday Challenge</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading active challenges...</div>
+  </div>
+
+  <!-- Header Navigation -->
+  <header>
+    <nav class="navbar" aria-label="Main Navigation">
+      <a href="../index.html" class="brand">
+        <div class="brand-icon">SC</div>
+        <div class="brand-title">Sunday <span>Challenge</span></div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="../index.html" class="nav-link">Home</a></li>
+        <li><a href="student-dashboard.html" class="nav-link">Dashboard</a></li>
+        <li><a href="challenges.html" class="nav-link active">Challenges</a></li>
+        <li><a href="my-results.html" class="nav-link">My Results</a></li>
+      </ul>
+
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span class="stage-badge">Stage 4 Active</span>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
+          Logout
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container">
+
+    <!-- Global Error Banner -->
+    <div id="error-banner" class="alert-banner danger" style="display: none;">
+      <span>⚠️</span>
+      <div id="error-banner-text">Unable to load challenges. Please check backend connection.</div>
+    </div>
+
+    <!-- Header Section -->
+    <section class="hero" style="text-align: left; margin-bottom: 2rem;">
+      <div class="hero-subtitle">Assessment Portal</div>
+      <h1 class="hero-title">Available Challenges</h1>
+      <p class="hero-desc" style="margin: 0;">
+        Select an assessment below to test your aptitude, reasoning, and problem-solving skills.
+      </p>
+    </section>
+
+    <!-- Challenges Cards Grid Container -->
+    <div id="challenges-grid" class="challenge-grid">
+      <!-- Challenge Cards dynamically rendered via JS -->
+    </div>
+
+    <!-- Empty State Container (Hidden by default) -->
+    <div id="empty-state" class="empty-state" style="display: none;">
+      <div class="empty-icon">📚</div>
+      <div class="empty-title">No Active Challenges Available</div>
+      <div class="empty-desc">Check back later for newly scheduled assessments and quizzes.</div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>Sunday Challenge Platform — Stage 4 Challenge System</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const API_BASE_URL = 'http://localhost:8080';
+      const LOGIN_PAGE_URL = 'login.html';
+
+      const loadingOverlay = document.getElementById('loading-overlay');
+      const errorBanner = document.getElementById('error-banner');
+      const errorBannerText = document.getElementById('error-banner-text');
+      const challengesGrid = document.getElementById('challenges-grid');
+      const emptyState = document.getElementById('empty-state');
+      const logoutBtn = document.getElementById('logout-btn');
+
+      async function fetchActiveChallenges() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/challenges`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            credentials: 'include'
+          });
+
+          if (response.ok) {
+            const challenges = await response.json();
+            renderChallenges(challenges);
+          } else if (response.status === 401) {
+            window.location.href = LOGIN_PAGE_URL;
+          } else {
+            throw new Error(`Server returned HTTP ${response.status}`);
+          }
+        } catch (error) {
+          console.error('Error fetching challenges:', error);
+          if (errorBanner && errorBannerText) {
+            errorBannerText.textContent = 'Unable to connect to backend server. Please refresh or try again.';
+            errorBanner.style.display = 'flex';
+          }
+        } finally {
+          if (loadingOverlay) {
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => { loadingOverlay.style.display = 'none'; }, 300);
+          }
+        }
+      }
+
+      function renderChallenges(challenges) {
+        if (!challenges || challenges.length === 0) {
+          if (emptyState) emptyState.style.display = 'block';
+          return;
+        }
+
+        challengesGrid.innerHTML = challenges.map(c => `
+          <div class="challenge-card">
+            <div>
+              <div class="challenge-tag-bar">
+                <span class="badge-tag">${c.category || 'APTITUDE'}</span>
+                <span class="badge-tag ${(c.difficulty || 'EASY').toLowerCase()}">${c.difficulty || 'EASY'}</span>
+              </div>
+              <h2 class="challenge-title">${c.title}</h2>
+              <p class="challenge-desc">${c.description || 'No description provided.'}</p>
+            </div>
+
+            <div>
+              <div class="challenge-meta-row">
+                <span>❓ ${c.totalQuestions || 0} Questions</span>
+                <span>⏱️ ${c.durationMinutes || 0} Minutes</span>
+                <span>🏆 ${c.totalPoints || 0} Points</span>
+              </div>
+              <a href="challenge-details.html?id=${c.id}" class="btn" style="width: 100%;">
+                Start Challenge
+              </a>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.location.href = `${API_BASE_URL}/logout`;
+        });
+      }
+
+      await fetchActiveChallenges();
+    });
+  </script>
+</body>
+</html>

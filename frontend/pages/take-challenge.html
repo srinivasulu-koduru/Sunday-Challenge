@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sunday Challenge — Take Challenge">
+  <title>Take Challenge — Sunday Challenge</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <!-- Submission / Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <div id="loading-text" class="loading-text">Preparing your challenge questions...</div>
+  </div>
+
+  <!-- Confirmation Modal Container -->
+  <div id="confirm-modal" class="loading-overlay" style="display: none; background: rgba(9, 13, 22, 0.92);">
+    <div class="card" style="max-width: 450px; text-align: center; padding: 2rem;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📝</div>
+      <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin-bottom: 0.5rem;">Submit Challenge?</h2>
+      <p style="color: var(--text-muted); font-size: 0.925rem; margin-bottom: 1.5rem;">
+        Are you sure you want to finalize and submit your responses? Once submitted, your score will be calculated and cannot be changed.
+      </p>
+      <div style="display: flex; gap: 1rem;">
+        <button id="cancel-submit-btn" class="btn btn-secondary" style="flex: 1;">Cancel</button>
+        <button id="confirm-submit-btn" class="btn" style="flex: 1;">Yes, Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header Navigation -->
+  <header>
+    <nav class="navbar" aria-label="Main Navigation">
+      <a href="../index.html" class="brand">
+        <div class="brand-icon">SC</div>
+        <div class="brand-title">Sunday <span>Challenge</span></div>
+      </a>
+
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <div class="timer-box">
+          <span>⏱️</span>
+          <span id="timer-display">15:00</span>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container" style="max-width: 900px;">
+
+    <!-- Quiz Header Bar -->
+    <div class="quiz-header">
+      <div>
+        <div id="quiz-challenge-title" style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text-main);">
+          Aptitude Challenge
+        </div>
+        <div id="q-counter" style="color: var(--text-muted); font-size: 0.85rem;">
+          Question 1 of 10
+        </div>
+      </div>
+
+      <button id="header-submit-btn" class="btn" style="padding: 0.5rem 1.2rem; font-size: 0.875rem;">
+        Submit Challenge
+      </button>
+    </div>
+
+    <!-- Question Palette -->
+    <div id="question-palette" class="question-palette">
+      <!-- Question number pills rendered via JS -->
+    </div>
+
+    <!-- Active Question Card -->
+    <section class="card" id="question-card">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+        <span id="q-badge" class="badge-tag">Question 1</span>
+        <span id="q-points" style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600;">+10 Points</span>
+      </div>
+
+      <h2 id="q-text" style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 700; margin-bottom: 1.5rem; line-height: 1.4;">
+        Loading question text...
+      </h2>
+
+      <!-- Options List -->
+      <div class="option-list">
+        <div class="option-card" data-option="A">
+          <div class="option-badge">A</div>
+          <div id="opt-a-text" style="font-size: 0.95rem; font-weight: 500;">Option A Text</div>
+        </div>
+        <div class="option-card" data-option="B">
+          <div class="option-badge">B</div>
+          <div id="opt-b-text" style="font-size: 0.95rem; font-weight: 500;">Option B Text</div>
+        </div>
+        <div class="option-card" data-option="C">
+          <div class="option-badge">C</div>
+          <div id="opt-c-text" style="font-size: 0.95rem; font-weight: 500;">Option C Text</div>
+        </div>
+        <div class="option-card" data-option="D">
+          <div class="option-badge">D</div>
+          <div id="opt-d-text" style="font-size: 0.95rem; font-weight: 500;">Option D Text</div>
+        </div>
+      </div>
+
+      <!-- Navigation Footer -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color);">
+        <button id="prev-btn" class="btn btn-secondary" style="padding: 0.65rem 1.4rem;">
+          ← Previous
+        </button>
+
+        <button id="next-btn" class="btn" style="padding: 0.65rem 1.4rem;">
+          Next Question →
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const API_BASE_URL = 'http://localhost:8080';
+      const urlParams = new URLSearchParams(window.location.search);
+      const attemptId = urlParams.get('attemptId');
+      const challengeId = urlParams.get('challengeId');
+
+      if (!attemptId || !challengeId) {
+        window.location.href = 'challenges.html';
+        return;
+      }
+
+      // State Management
+      let questions = [];
+      let currentIdx = 0;
+      let userAnswers = {}; // Map of questionId -> "A" | "B" | "C" | "D"
+      let timerInterval = null;
+      let durationMinutes = 15;
+      let startedAtTime = null;
+
+      // DOM Elements
+      const loadingOverlay = document.getElementById('loading-overlay');
+      const loadingText = document.getElementById('loading-text');
+      const confirmModal = document.getElementById('confirm-modal');
+
+      const quizChallengeTitle = document.getElementById('quiz-challenge-title');
+      const qCounter = document.getElementById('q-counter');
+      const qPalette = document.getElementById('question-palette');
+
+      const qBadge = document.getElementById('q-badge');
+      const qPoints = document.getElementById('q-points');
+      const qText = document.getElementById('q-text');
+
+      const optAText = document.getElementById('opt-a-text');
+      const optBText = document.getElementById('opt-b-text');
+      const optCText = document.getElementById('opt-c-text');
+      const optDText = document.getElementById('opt-d-text');
+      const optionCards = document.querySelectorAll('.option-card');
+
+      const prevBtn = document.getElementById('prev-btn');
+      const nextBtn = document.getElementById('next-btn');
+      const headerSubmitBtn = document.getElementById('header-submit-btn');
+
+      const confirmSubmitBtn = document.getElementById('confirm-submit-btn');
+      const cancelSubmitBtn = document.getElementById('cancel-submit-btn');
+      const timerDisplay = document.getElementById('timer-display');
+
+      /**
+       * Fetch attempt questions
+       */
+      async function initQuiz() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/challenges/${challengeId}/start`, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json' },
+            credentials: 'include'
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            questions = data.questions || [];
+            durationMinutes = data.durationMinutes || 15;
+            startedAtTime = data.startedAt ? new Date(data.startedAt) : new Date();
+            quizChallengeTitle.textContent = data.challengeTitle || 'Challenge';
+
+            if (questions.length === 0) {
+              alert('No questions available in this challenge.');
+              window.location.href = 'challenges.html';
+              return;
+            }
+
+            renderPalette();
+            renderQuestion(0);
+            startCountdownTimer();
+          } else if (response.status === 401) {
+            window.location.href = 'login.html';
+          } else {
+            alert('Unable to load attempt questions.');
+            window.location.href = 'challenges.html';
+          }
+        } catch (err) {
+          console.error('Quiz init error:', err);
+          alert('Network error while initializing quiz.');
+          window.location.href = 'challenges.html';
+        } finally {
+          if (loadingOverlay) {
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => { loadingOverlay.style.display = 'none'; }, 300);
+          }
+        }
+      }
+
+      /**
+       * Countdown timer based on startedAt + durationMinutes
+       */
+      function startCountdownTimer() {
+        const endTime = new Date(startedAtTime.getTime() + durationMinutes * 60 * 1000);
+
+        function updateTimer() {
+          const now = new Date();
+          const remainingMs = endTime - now;
+
+          if (remainingMs <= 0) {
+            clearInterval(timerInterval);
+            timerDisplay.textContent = '00:00';
+            alert('Time has expired! Automatically submitting your answers.');
+            submitAttempt();
+            return;
+          }
+
+          const totalSecs = Math.floor(remainingMs / 1000);
+          const mins = Math.floor(totalSecs / 60);
+          const secs = totalSecs % 60;
+          timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        updateTimer();
+        timerInterval = setInterval(updateTimer, 1000);
+      }
+
+      /**
+       * Render question palette pills (1..N)
+       */
+      function renderPalette() {
+        qPalette.innerHTML = questions.map((q, i) => `
+          <button class="q-pill ${i === currentIdx ? 'active' : ''} ${userAnswers[q.id] ? 'answered' : ''}" data-index="${i}">
+            ${i + 1}
+          </button>
+        `).join('');
+
+        qPalette.querySelectorAll('.q-pill').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const idx = parseInt(btn.getAttribute('data-index'));
+            renderQuestion(idx);
+          });
+        });
+      }
+
+      /**
+       * Render active question details
+       */
+      function renderQuestion(idx) {
+        currentIdx = idx;
+        const q = questions[idx];
+
+        qCounter.textContent = `Question ${idx + 1} of ${questions.length}`;
+        qBadge.textContent = `Question ${idx + 1}`;
+        qPoints.textContent = `+${q.points || 10} Points`;
+        qText.textContent = q.questionText;
+
+        optAText.textContent = q.optionA;
+        optBText.textContent = q.optionB;
+        optCText.textContent = q.optionC;
+        optDText.textContent = q.optionD;
+
+        // Reset & restore selected state
+        const selected = userAnswers[q.id];
+        optionCards.forEach(card => {
+          const optVal = card.getAttribute('data-option');
+          if (optVal === selected) {
+            card.classList.add('selected');
+          } else {
+            card.classList.remove('selected');
+          }
+        });
+
+        // Prev / Next button states
+        prevBtn.disabled = (idx === 0);
+        if (idx === questions.length - 1) {
+          nextBtn.textContent = 'Review & Submit';
+        } else {
+          nextBtn.textContent = 'Next Question →';
+        }
+
+        renderPalette();
+      }
+
+      /**
+       * Option click handler
+       */
+      optionCards.forEach(card => {
+        card.addEventListener('click', () => {
+          const currentQ = questions[currentIdx];
+          const selectedOpt = card.getAttribute('data-option');
+          userAnswers[currentQ.id] = selectedOpt;
+
+          optionCards.forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+
+          renderPalette();
+        });
+      });
+
+      // Navigation listeners
+      prevBtn.addEventListener('click', () => {
+        if (currentIdx > 0) renderQuestion(currentIdx - 1);
+      });
+
+      nextBtn.addEventListener('click', () => {
+        if (currentIdx < questions.length - 1) {
+          renderQuestion(currentIdx + 1);
+        } else {
+          confirmModal.style.display = 'flex';
+        }
+      });
+
+      headerSubmitBtn.addEventListener('click', () => {
+        confirmModal.style.display = 'flex';
+      });
+
+      cancelSubmitBtn.addEventListener('click', () => {
+        confirmModal.style.display = 'none';
+      });
+
+      confirmSubmitBtn.addEventListener('click', async () => {
+        confirmModal.style.display = 'none';
+        await submitAttempt();
+      });
+
+      /**
+       * Submit attempt answers to backend
+       */
+      async function submitAttempt() {
+        if (timerInterval) clearInterval(timerInterval);
+
+        loadingText.textContent = 'Evaluating your answers...';
+        loadingOverlay.style.display = 'flex';
+        loadingOverlay.style.opacity = '1';
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/challenges/${challengeId}/submit`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              attemptId: parseInt(attemptId),
+              answers: userAnswers
+            })
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            window.location.href = `challenge-result.html?attemptId=${result.attemptId}&challengeId=${challengeId}`;
+          } else if (response.status === 401) {
+            window.location.href = 'login.html';
+          } else {
+            alert('Failed to submit attempt. Please try again.');
+            loadingOverlay.style.display = 'none';
+          }
+        } catch (err) {
+          console.error('Submission error:', err);
+          alert('Network error while submitting challenge.');
+          loadingOverlay.style.display = 'none';
+        }
+      }
+
+      await initQuiz();
+    });
+  </script>
+</body>
+</html>

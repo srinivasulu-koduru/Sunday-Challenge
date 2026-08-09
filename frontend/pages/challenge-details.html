@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sunday Challenge — Challenge Overview & Instructions">
+  <title>Challenge Details — Sunday Challenge</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading challenge details...</div>
+  </div>
+
+  <!-- Header Navigation -->
+  <header>
+    <nav class="navbar" aria-label="Main Navigation">
+      <a href="../index.html" class="brand">
+        <div class="brand-icon">SC</div>
+        <div class="brand-title">Sunday <span>Challenge</span></div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="../index.html" class="nav-link">Home</a></li>
+        <li><a href="student-dashboard.html" class="nav-link">Dashboard</a></li>
+        <li><a href="challenges.html" class="nav-link active">Challenges</a></li>
+        <li><a href="my-results.html" class="nav-link">My Results</a></li>
+      </ul>
+
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span class="stage-badge">Stage 4 Active</span>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
+          Logout
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container" style="max-width: 800px;">
+
+    <!-- Global Error Banner -->
+    <div id="error-banner" class="alert-banner danger" style="display: none;">
+      <span>⚠️</span>
+      <div id="error-banner-text">Unable to load challenge details.</div>
+    </div>
+
+    <!-- Back Button -->
+    <div style="margin-bottom: 1.5rem;">
+      <a href="challenges.html" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+        ← Back to Challenges
+      </a>
+    </div>
+
+    <!-- Challenge Overview Card -->
+    <section class="card">
+      <div class="challenge-tag-bar">
+        <span id="c-category" class="badge-tag">APTITUDE</span>
+        <span id="c-difficulty" class="badge-tag easy">EASY</span>
+      </div>
+
+      <h1 id="c-title" class="hero-title" style="text-align: left; font-size: 2.2rem; margin-bottom: 0.5rem;">
+        Loading Challenge...
+      </h1>
+
+      <p id="c-desc" style="color: var(--text-muted); font-size: 1rem; margin-bottom: 1.75rem;">
+        Loading description...
+      </p>
+
+      <div class="stats-grid" style="margin-bottom: 2rem;">
+        <div class="stat-card">
+          <div class="stat-info">
+            <span id="c-questions" class="stat-value">0</span>
+            <span class="stat-label">Questions</span>
+          </div>
+          <div class="stat-icon-bg">❓</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-info">
+            <span id="c-duration" class="stat-value">0</span>
+            <span class="stat-label">Minutes</span>
+          </div>
+          <div class="stat-icon-bg amber">⏱️</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-info">
+            <span id="c-points" class="stat-value">0</span>
+            <span class="stat-label">Total Points</span>
+          </div>
+          <div class="stat-icon-bg cyan">🏆</div>
+        </div>
+      </div>
+
+      <!-- Instructions & Rules -->
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 2rem;">
+        <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem;">
+          📋 Challenge Rules &amp; Instructions
+        </h3>
+        <ul id="c-rules-list" style="color: var(--text-muted); font-size: 0.925rem; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
+          <li>Read every question carefully before selecting an option.</li>
+          <li>The countdown timer starts as soon as you click "Start Challenge".</li>
+          <li>You can navigate back and forth between questions before submitting.</li>
+          <li>The attempt will automatically expire when time runs out.</li>
+          <li>Once submitted, your attempt cannot be changed.</li>
+        </ul>
+      </div>
+
+      <!-- Action Button -->
+      <div style="display: flex; gap: 1rem;">
+        <button id="start-btn" class="btn" style="flex: 1; padding: 0.9rem; font-size: 1.05rem;">
+          🚀 Start Challenge Now
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>Sunday Challenge Platform — Stage 4 Challenge System</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const API_BASE_URL = 'http://localhost:8080';
+      const urlParams = new URLSearchParams(window.location.search);
+      const challengeId = urlParams.get('id');
+
+      if (!challengeId) {
+        window.location.href = 'challenges.html';
+        return;
+      }
+
+      const loadingOverlay = document.getElementById('loading-overlay');
+      const errorBanner = document.getElementById('error-banner');
+      const errorBannerText = document.getElementById('error-banner-text');
+
+      const cTitle = document.getElementById('c-title');
+      const cDesc = document.getElementById('c-desc');
+      const cCategory = document.getElementById('c-category');
+      const cDifficulty = document.getElementById('c-difficulty');
+      const cQuestions = document.getElementById('c-questions');
+      const cDuration = document.getElementById('c-duration');
+      const cPoints = document.getElementById('c-points');
+      const cRulesList = document.getElementById('c-rules-list');
+      const startBtn = document.getElementById('start-btn');
+      const logoutBtn = document.getElementById('logout-btn');
+
+      async function loadDetails() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/challenges/${challengeId}`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            credentials: 'include'
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            cTitle.textContent = data.title;
+            cDesc.textContent = data.description || '';
+            cCategory.textContent = data.category || 'APTITUDE';
+            cDifficulty.textContent = data.difficulty || 'EASY';
+            cDifficulty.className = `badge-tag ${(data.difficulty || 'EASY').toLowerCase()}`;
+            cQuestions.textContent = data.totalQuestions || 0;
+            cDuration.textContent = data.durationMinutes || 0;
+            cPoints.textContent = data.totalPoints || 0;
+
+            if (data.rules && data.rules.length > 0) {
+              cRulesList.innerHTML = data.rules.map(r => `<li>${r}</li>`).join('');
+            }
+          } else if (response.status === 401) {
+            window.location.href = 'login.html';
+          } else {
+            throw new Error(`Server status ${response.status}`);
+          }
+        } catch (err) {
+          console.error('Error loading details:', err);
+          if (errorBanner && errorBannerText) {
+            errorBannerText.textContent = 'Unable to load challenge details.';
+            errorBanner.style.display = 'flex';
+          }
+        } finally {
+          if (loadingOverlay) {
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => { loadingOverlay.style.display = 'none'; }, 300);
+          }
+        }
+      }
+
+      async function handleStartChallenge() {
+        startBtn.disabled = true;
+        startBtn.textContent = 'Initializing Attempt...';
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/challenges/${challengeId}/start`, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json' },
+            credentials: 'include'
+          });
+
+          if (response.ok) {
+            const startData = await response.json();
+            // Redirect to quiz page with attemptId and challengeId
+            window.location.href = `take-challenge.html?attemptId=${startData.attemptId}&challengeId=${challengeId}`;
+          } else if (response.status === 401) {
+            window.location.href = 'login.html';
+          } else {
+            alert('Unable to start challenge. Please try again.');
+            startBtn.disabled = false;
+            startBtn.textContent = '🚀 Start Challenge Now';
+          }
+        } catch (err) {
+          console.error('Error starting challenge:', err);
+          alert('Network error. Unable to start challenge.');
+          startBtn.disabled = false;
+          startBtn.textContent = '🚀 Start Challenge Now';
+        }
+      }
+
+      if (startBtn) startBtn.addEventListener('click', handleStartChallenge);
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.location.href = `${API_BASE_URL}/logout`;
+        });
+      }
+
+      await loadDetails();
+    });
+  </script>
+</body>
+</html>

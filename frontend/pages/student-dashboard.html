@@ -25,12 +25,13 @@
 
       <ul class="nav-links">
         <li><a href="../index.html" class="nav-link">Home</a></li>
-        <li><a href="student-dashboard.html" class="nav-link active">Student</a></li>
-        <li><a href="#" class="nav-link disabled">Admin <span class="badge-upcoming">Stage 5</span></a></li>
+        <li><a href="student-dashboard.html" class="nav-link active">Dashboard</a></li>
+        <li><a href="challenges.html" class="nav-link">Challenges</a></li>
+        <li><a href="my-results.html" class="nav-link">My Results</a></li>
       </ul>
 
       <div style="display: flex; align-items: center; gap: 1rem;">
-        <span class="stage-badge">Stage 3 Dashboard Active</span>
+        <span class="stage-badge">Stage 4 Active</span>
         <button id="logout-btn" class="btn btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
           Logout
         </button>
@@ -56,13 +57,11 @@
         <a href="student-dashboard.html" class="sidebar-link active">
           <span>📊 Dashboard</span>
         </a>
-        <a href="#" class="sidebar-link disabled" title="Available in Stage 4">
+        <a href="challenges.html" class="sidebar-link">
           <span>📝 Challenges</span>
-          <span class="badge-upcoming">Stage 4</span>
         </a>
-        <a href="#" class="sidebar-link disabled" title="Available in Stage 7">
-          <span>🏆 Results</span>
-          <span class="badge-upcoming">Stage 7</span>
+        <a href="my-results.html" class="sidebar-link">
+          <span>🏆 My Results</span>
         </a>
         <a href="#profile-section" class="sidebar-link">
           <span>👤 Profile</span>
@@ -181,12 +180,15 @@
         <section class="card">
           <div class="card-header">
             <h2 class="card-title">⚡ Recent Activity</h2>
+            <a href="my-results.html" style="color: var(--accent-primary); font-size: 0.85rem; font-weight: 600; text-decoration: none;">View All Results →</a>
           </div>
 
-          <div class="empty-state">
-            <div class="empty-icon">📭</div>
-            <div class="empty-title">No Recent Activity</div>
-            <div class="empty-desc">You have not participated in any exams or assessments yet. Scheduled challenges will appear here in future stages.</div>
+          <div id="recent-activity-container">
+            <div class="empty-state">
+              <div class="empty-icon">📭</div>
+              <div class="empty-title">No Recent Activity</div>
+              <div class="empty-desc">You have not participated in any exams or assessments yet. Head over to Challenges to start your first test!</div>
+            </div>
           </div>
         </section>
 
@@ -197,17 +199,15 @@
 
   <!-- Footer -->
   <footer>
-    <p>Sunday Challenge Platform — Student Dashboard (Stage 3 Complete)</p>
+    <p>Sunday Challenge Platform — Student Dashboard (Stage 4 Active)</p>
   </footer>
 
   <!-- Script for Dashboard REST API Integration -->
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
-      // Configuration
       const API_BASE_URL = 'http://localhost:8080';
       const LOGIN_PAGE_URL = 'login.html';
 
-      // DOM Elements
       const loadingOverlay = document.getElementById('loading-overlay');
       const errorBanner = document.getElementById('error-banner');
       const errorBannerText = document.getElementById('error-banner-text');
@@ -221,103 +221,138 @@
       const userAvatar = document.getElementById('user-avatar');
       const rolePill = document.getElementById('role-pill');
 
+      const statTotal = document.getElementById('stat-total-challenges');
+      const statCompleted = document.getElementById('stat-completed-challenges');
+      const statPending = document.getElementById('stat-pending-challenges');
+      const statPoints = document.getElementById('stat-total-points');
+      const recentActivityContainer = document.getElementById('recent-activity-container');
+
       const logoutBtn = document.getElementById('logout-btn');
       const sidebarLogoutBtn = document.getElementById('sidebar-logout-btn');
 
-      /**
-       * Formats an ISO Date String or Array into a clean readable date
-       */
       function formatDate(dateValue) {
         if (!dateValue) return 'Recently';
         try {
           const dateObj = new Date(dateValue);
           if (isNaN(dateObj.getTime())) return 'Recently';
-          return dateObj.toLocaleDateString(undefined, {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-          });
+          return dateObj.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
         } catch (e) {
           return 'Recently';
         }
       }
 
-      /**
-       * Fetches authenticated user details from GET /api/user/me
-       */
-      async function loadStudentProfile() {
+      async function loadDashboardData() {
         try {
-          const response = await fetch(`${API_BASE_URL}/api/user/me`, {
+          // 1. Fetch Profile
+          const profileRes = await fetch(`${API_BASE_URL}/api/user/me`, {
             method: 'GET',
-            headers: {
-              'Accept': 'application/json'
-            },
+            headers: { 'Accept': 'application/json' },
             credentials: 'include'
           });
 
-          if (response.ok) {
-            const user = await response.json();
-            
-            // Populate Personalized Welcome Banner
-            welcomeTitle.textContent = `Welcome, ${user.name || 'Student'} 👋`;
-
-            // Populate Student Profile Details
-            userName.textContent = user.name || 'Anonymous Student';
-            userEmail.textContent = user.email || 'No email provided';
-            userId.textContent = `#SC-${user.id ? String(user.id).padStart(4, '0') : '0000'}`;
-            userRoleDisplay.textContent = user.role || 'STUDENT';
-            rolePill.textContent = user.role || 'STUDENT';
-            userCreatedAt.textContent = formatDate(user.createdAt);
-
-            // Handle Profile Image with Default Avatar Fallback
-            if (user.profileImage) {
-              userAvatar.src = user.profileImage;
-              userAvatar.onerror = () => {
-                userAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=6366f1&color=fff`;
-              };
-            } else {
-              userAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=6366f1&color=fff`;
+          if (!profileRes.ok) {
+            if (profileRes.status === 401) {
+              window.location.href = LOGIN_PAGE_URL;
+              return;
             }
-
-          } else if (response.status === 401) {
-            // Unauthenticated: Redirect to login page
-            console.warn('User is unauthenticated. Redirecting to login page...');
-            window.location.href = LOGIN_PAGE_URL;
-            return;
-          } else {
-            throw new Error(`Server returned HTTP ${response.status}`);
+            throw new Error(`Profile HTTP ${profileRes.status}`);
           }
+
+          const user = await profileRes.json();
+          welcomeTitle.textContent = `Welcome, ${user.name || 'Student'} 👋`;
+          userName.textContent = user.name || 'Anonymous Student';
+          userEmail.textContent = user.email || '';
+          userId.textContent = `#SC-${user.id ? String(user.id).padStart(4, '0') : '0000'}`;
+          userRoleDisplay.textContent = user.role || 'STUDENT';
+          rolePill.textContent = user.role || 'STUDENT';
+          userCreatedAt.textContent = formatDate(user.createdAt);
+
+          if (user.profileImage) {
+            userAvatar.src = user.profileImage;
+            userAvatar.onerror = () => {
+              userAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=6366f1&color=fff`;
+            };
+          } else {
+            userAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=6366f1&color=fff`;
+          }
+
+          // 2. Fetch Stats
+          const statsRes = await fetch(`${API_BASE_URL}/api/user/stats`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            credentials: 'include'
+          });
+          if (statsRes.ok) {
+            const stats = await statsRes.json();
+            statTotal.textContent = stats.totalChallenges || 0;
+            statCompleted.textContent = stats.completedChallenges || 0;
+            statPending.textContent = stats.pendingChallenges || 0;
+            statPoints.textContent = stats.totalPoints || 0;
+          }
+
+          // 3. Fetch Recent Activity
+          const attemptsRes = await fetch(`${API_BASE_URL}/api/user/attempts`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            credentials: 'include'
+          });
+          if (attemptsRes.ok) {
+            const attempts = await attemptsRes.json();
+            renderRecentActivity(attempts);
+          }
+
         } catch (error) {
-          console.error('Error fetching student profile:', error);
+          console.error('Error fetching dashboard:', error);
           if (errorBanner && errorBannerText) {
-            errorBannerText.textContent = 'Unable to load your dashboard. Please check backend connection and refresh.';
+            errorBannerText.textContent = 'Unable to load dashboard data. Please check backend connection.';
             errorBanner.style.display = 'flex';
           }
         } finally {
-          // Remove Loading Overlay after fetch completes
           if (loadingOverlay) {
             loadingOverlay.style.opacity = '0';
-            setTimeout(() => {
-              loadingOverlay.style.display = 'none';
-            }, 300);
+            setTimeout(() => { loadingOverlay.style.display = 'none'; }, 300);
           }
         }
       }
 
-      /**
-       * Handles user logout
-       */
+      function renderRecentActivity(attempts) {
+        if (!attempts || attempts.length === 0) {
+          return; // Keep default empty state
+        }
+
+        // Display top 3 recent attempts
+        const recentList = attempts.slice(0, 3);
+        recentActivityContainer.innerHTML = recentList.map(a => `
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-bottom: 1px solid var(--border-color); gap: 1rem;">
+            <div>
+              <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--text-main); margin-bottom: 0.2rem;">
+                ${a.challengeTitle}
+              </div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">
+                ${formatDate(a.submittedAt)} • Status: <span style="color: ${a.status === 'EXPIRED' ? 'var(--accent-rose)' : 'var(--accent-emerald)'}">${a.status}</span>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--accent-primary);">
+                ${a.score}/${a.totalPoints}
+              </div>
+              <div style="font-size: 0.8rem; color: var(--accent-emerald); font-weight: 600;">
+                +${a.pointsEarned} pts
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
       function handleLogout(e) {
         if (e) e.preventDefault();
         window.location.href = `${API_BASE_URL}/logout`;
       }
 
-      // Attach Logout event listeners
       if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
       if (sidebarLogoutBtn) sidebarLogoutBtn.addEventListener('click', handleLogout);
 
-      // Execute dashboard loading sequence
-      await loadStudentProfile();
+      await loadDashboardData();
     });
   </script>
 </body>
