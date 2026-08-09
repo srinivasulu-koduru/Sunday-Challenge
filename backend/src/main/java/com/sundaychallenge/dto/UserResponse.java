@@ -3,6 +3,8 @@ package com.sundaychallenge.dto;
 import com.sundaychallenge.entity.Role;
 import com.sundaychallenge.entity.User;
 
+import java.time.LocalDateTime;
+
 /**
  * Data Transfer Object for returning authenticated user details.
  * Ensures security by omitting sensitive tokens and internal fields.
@@ -12,7 +14,8 @@ public record UserResponse(
         String name,
         String email,
         String profileImage,
-        Role role
+        Role role,
+        LocalDateTime createdAt
 ) {
     /**
      * Factory method to convert a User entity into a UserResponse DTO.
@@ -26,7 +29,8 @@ public record UserResponse(
                 user.getName(),
                 user.getEmail(),
                 user.getProfileImage(),
-                user.getRole()
+                user.getRole(),
+                user.getCreatedAt()
         );
     }
 }

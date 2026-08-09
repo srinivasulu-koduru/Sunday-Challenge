@@ -3,11 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Sunday Challenge - Student Dashboard">
+  <meta name="description" content="Sunday Challenge — Student Dashboard">
   <title>Student Dashboard — Sunday Challenge</title>
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
+
+  <!-- Fullscreen Loading Spinner Overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading your dashboard...</div>
+  </div>
 
   <!-- Header Navigation -->
   <header>
@@ -20,133 +26,298 @@
       <ul class="nav-links">
         <li><a href="../index.html" class="nav-link">Home</a></li>
         <li><a href="student-dashboard.html" class="nav-link active">Student</a></li>
-        <li><a href="admin-dashboard.html" class="nav-link">Admin / T&amp;P</a></li>
-        <li><a href="exam.html" class="nav-link">Exams</a></li>
-        <li><a href="result.html" class="nav-link">Results</a></li>
+        <li><a href="#" class="nav-link disabled">Admin <span class="badge-upcoming">Stage 5</span></a></li>
       </ul>
 
       <div style="display: flex; align-items: center; gap: 1rem;">
-        <span class="stage-badge">Stage 2 Active</span>
-        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.4rem 0.9rem; font-size: 0.85rem;">
+        <span class="stage-badge">Stage 3 Dashboard Active</span>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
           Logout
         </button>
       </div>
     </nav>
   </header>
 
-  <!-- Dashboard Container -->
+  <!-- Dashboard Main Container -->
   <main class="container">
-    
-    <!-- User Profile Hero Card -->
-    <section class="card" id="user-profile-card">
-      <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
-        
-        <!-- Profile Picture Avatar -->
-        <div style="position: relative;">
-          <img id="user-avatar" src="https://via.placeholder.com/96" alt="Profile Picture" style="width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-primary); box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);" />
-          <span id="role-pill" class="status-pill online" style="position: absolute; bottom: -5px; right: -5px; font-size: 0.7rem; padding: 0.2rem 0.6rem;">
-            STUDENT
-          </span>
-        </div>
 
-        <!-- User Information Text -->
-        <div style="flex: 1; min-width: 250px;">
-          <div style="color: var(--accent-cyan); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.25rem;">
-            Authenticated Student Account
-          </div>
-          <h1 id="user-welcome-name" style="font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800; margin-bottom: 0.25rem;">
-            Welcome, Loading...
-          </h1>
-          <p id="user-email" style="color: var(--text-muted); font-size: 0.95rem;">
-            Loading email...
-          </p>
-        </div>
+    <!-- Global Error Banner (Hidden by default) -->
+    <div id="error-banner" class="alert-banner danger" style="display: none;">
+      <span>⚠️</span>
+      <div id="error-banner-text">Unable to load your dashboard. Please try again.</div>
+    </div>
 
-      </div>
-    </section>
-
-    <!-- Student Dashboard Modules Overview -->
-    <section>
-      <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; margin-bottom: 1rem;">Student Modules</h2>
+    <!-- Responsive Layout Grid: Sidebar + Main Content -->
+    <div class="dashboard-layout">
       
-      <div class="grid">
-        <div class="feature-card">
-          <div class="feature-icon">👤</div>
-          <div class="feature-title">Profile Authentication</div>
-          <div class="feature-desc">Authenticated via Google OAuth 2.0. Account details verified in MySQL database.</div>
-          <span class="feature-status active">VERIFIED</span>
-        </div>
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar">
+        <div class="sidebar-title">Student Menu</div>
+        <a href="student-dashboard.html" class="sidebar-link active">
+          <span>📊 Dashboard</span>
+        </a>
+        <a href="#" class="sidebar-link disabled" title="Available in Stage 4">
+          <span>📝 Challenges</span>
+          <span class="badge-upcoming">Stage 4</span>
+        </a>
+        <a href="#" class="sidebar-link disabled" title="Available in Stage 7">
+          <span>🏆 Results</span>
+          <span class="badge-upcoming">Stage 7</span>
+        </a>
+        <a href="#profile-section" class="sidebar-link">
+          <span>👤 Profile</span>
+        </a>
+        <a href="#" id="sidebar-logout-btn" class="sidebar-link" style="color: var(--accent-rose); margin-top: 1rem;">
+          <span>🚪 Logout</span>
+        </a>
+      </aside>
 
-        <div class="feature-card">
-          <div class="feature-icon">📝</div>
-          <div class="feature-title">My Exams &amp; Tests</div>
-          <div class="feature-desc">Scheduled aptitude, reasoning, and coding assessments.</div>
-          <span class="feature-status upcoming">STAGE 3 &amp; 4</span>
-        </div>
+      <!-- Main Dashboard Content -->
+      <div class="main-content">
+        
+        <!-- Welcome Hero Banner -->
+        <section class="card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%);">
+          <div style="color: var(--accent-cyan); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.25rem;">
+            Student Portal
+          </div>
+          <h1 id="welcome-title" class="hero-title" style="font-size: 2.1rem; text-align: left; margin-bottom: 0.35rem;">
+            Welcome, Student 👋
+          </h1>
+          <p class="hero-desc" style="text-align: left; margin: 0; font-size: 0.95rem;">
+            Ready to continue your learning journey? Access your scheduled assessments and performance insights below.
+          </p>
+        </section>
 
-        <div class="feature-card">
-          <div class="feature-icon">📊</div>
-          <div class="feature-title">Performance Analytics</div>
-          <div class="feature-desc">Individual test breakdown, score reports, and class leaderboards.</div>
-          <span class="feature-status upcoming">STAGE 7</span>
-        </div>
+        <!-- Authenticated Student Profile Card -->
+        <section class="card" id="profile-section">
+          <div class="card-header">
+            <h2 class="card-title">👤 Student Profile</h2>
+            <span class="status-pill online">
+              <span class="status-dot"></span>
+              AUTHENTICATED
+            </span>
+          </div>
+
+          <div class="profile-card-content">
+            <!-- Profile Avatar with Fallback -->
+            <div class="avatar-wrapper">
+              <img id="user-avatar" src="https://ui-avatars.com/api/?name=Student&background=6366f1&color=fff" alt="Profile Picture" class="user-avatar-img" />
+              <span id="role-pill" class="role-pill-overlay">STUDENT</span>
+            </div>
+
+            <!-- Profile Metadata Grid -->
+            <div class="profile-details">
+              <div class="profile-tag">Google Verified Student</div>
+              <div id="user-name" class="profile-name">Loading...</div>
+              <div id="user-email" style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 0.75rem;">
+                loading@example.com
+              </div>
+
+              <div class="profile-meta-grid">
+                <div class="meta-item">
+                  <span class="meta-label">User ID</span>
+                  <span id="user-id" class="meta-value">#SC----</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">Account Role</span>
+                  <span id="user-role-display" class="meta-value">STUDENT</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">Member Since</span>
+                  <span id="user-created-at" class="meta-value">Loading...</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- Statistics Overview Grid -->
+        <section style="margin-bottom: 1.75rem;">
+          <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">
+            Assessment Overview
+          </h2>
+          
+          <div class="stats-grid">
+            <!-- Stat 1: Total Challenges -->
+            <div class="stat-card">
+              <div class="stat-info">
+                <span class="stat-value" id="stat-total-challenges">0</span>
+                <span class="stat-label">Total Challenges</span>
+              </div>
+              <div class="stat-icon-bg">📚</div>
+            </div>
+
+            <!-- Stat 2: Completed Challenges -->
+            <div class="stat-card">
+              <div class="stat-info">
+                <span class="stat-value" id="stat-completed-challenges">0</span>
+                <span class="stat-label">Completed Challenges</span>
+              </div>
+              <div class="stat-icon-bg emerald">✅</div>
+            </div>
+
+            <!-- Stat 3: Pending Challenges -->
+            <div class="stat-card">
+              <div class="stat-info">
+                <span class="stat-value" id="stat-pending-challenges">0</span>
+                <span class="stat-label">Pending Challenges</span>
+              </div>
+              <div class="stat-icon-bg amber">⏳</div>
+            </div>
+
+            <!-- Stat 4: Total Points -->
+            <div class="stat-card">
+              <div class="stat-info">
+                <span class="stat-value" id="stat-total-points">0</span>
+                <span class="stat-label">Total Points</span>
+              </div>
+              <div class="stat-icon-bg cyan">🏆</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Recent Activity Section -->
+        <section class="card">
+          <div class="card-header">
+            <h2 class="card-title">⚡ Recent Activity</h2>
+          </div>
+
+          <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <div class="empty-title">No Recent Activity</div>
+            <div class="empty-desc">You have not participated in any exams or assessments yet. Scheduled challenges will appear here in future stages.</div>
+          </div>
+        </section>
+
       </div>
-    </section>
+    </div>
 
   </main>
 
+  <!-- Footer -->
   <footer>
-    <p>Sunday Challenge Platform — Student Dashboard (Stage 2 Google OAuth Active)</p>
+    <p>Sunday Challenge Platform — Student Dashboard (Stage 3 Complete)</p>
   </footer>
 
+  <!-- Script for Dashboard REST API Integration -->
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
-      const welcomeName = document.getElementById('user-welcome-name');
+      // Configuration
+      const API_BASE_URL = 'http://localhost:8080';
+      const LOGIN_PAGE_URL = 'login.html';
+
+      // DOM Elements
+      const loadingOverlay = document.getElementById('loading-overlay');
+      const errorBanner = document.getElementById('error-banner');
+      const errorBannerText = document.getElementById('error-banner-text');
+
+      const welcomeTitle = document.getElementById('welcome-title');
+      const userName = document.getElementById('user-name');
       const userEmail = document.getElementById('user-email');
+      const userId = document.getElementById('user-id');
+      const userRoleDisplay = document.getElementById('user-role-display');
+      const userCreatedAt = document.getElementById('user-created-at');
       const userAvatar = document.getElementById('user-avatar');
       const rolePill = document.getElementById('role-pill');
+
       const logoutBtn = document.getElementById('logout-btn');
+      const sidebarLogoutBtn = document.getElementById('sidebar-logout-btn');
 
-      const ME_API_URL = 'http://localhost:8080/api/user/me';
-      const LOGOUT_URL = 'http://localhost:8080/logout';
-
-      try {
-        // Fetch authenticated user profile with credentials: 'include'
-        const response = await fetch(ME_API_URL, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-          credentials: 'include'
-        });
-
-        if (response.ok) {
-          const user = await response.json();
-          welcomeName.textContent = `Welcome, ${user.name || 'Student'}`;
-          userEmail.textContent = user.email || '';
-          if (user.profileImage) {
-            userAvatar.src = user.profileImage;
-          } else {
-            userAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=6366f1&color=fff`;
-          }
-          rolePill.textContent = user.role || 'STUDENT';
-        } else if (response.status === 401) {
-          // Redirect unauthenticated user to login page
-          window.location.href = 'login.html';
-        } else {
-          throw new Error(`Unexpected status ${response.status}`);
+      /**
+       * Formats an ISO Date String or Array into a clean readable date
+       */
+      function formatDate(dateValue) {
+        if (!dateValue) return 'Recently';
+        try {
+          const dateObj = new Date(dateValue);
+          if (isNaN(dateObj.getTime())) return 'Recently';
+          return dateObj.toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          });
+        } catch (e) {
+          return 'Recently';
         }
-      } catch (error) {
-        console.warn('Authentication check failed:', error);
-        // Fallback for unauthenticated / error state
-        welcomeName.textContent = 'Welcome, Guest';
-        userEmail.textContent = 'Please log in to access your student dashboard.';
       }
 
-      // Logout button click handler
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-          window.location.href = LOGOUT_URL;
-        });
+      /**
+       * Fetches authenticated user details from GET /api/user/me
+       */
+      async function loadStudentProfile() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/user/me`, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json'
+            },
+            credentials: 'include'
+          });
+
+          if (response.ok) {
+            const user = await response.json();
+            
+            // Populate Personalized Welcome Banner
+            welcomeTitle.textContent = `Welcome, ${user.name || 'Student'} 👋`;
+
+            // Populate Student Profile Details
+            userName.textContent = user.name || 'Anonymous Student';
+            userEmail.textContent = user.email || 'No email provided';
+            userId.textContent = `#SC-${user.id ? String(user.id).padStart(4, '0') : '0000'}`;
+            userRoleDisplay.textContent = user.role || 'STUDENT';
+            rolePill.textContent = user.role || 'STUDENT';
+            userCreatedAt.textContent = formatDate(user.createdAt);
+
+            // Handle Profile Image with Default Avatar Fallback
+            if (user.profileImage) {
+              userAvatar.src = user.profileImage;
+              userAvatar.onerror = () => {
+                userAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=6366f1&color=fff`;
+              };
+            } else {
+              userAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=6366f1&color=fff`;
+            }
+
+          } else if (response.status === 401) {
+            // Unauthenticated: Redirect to login page
+            console.warn('User is unauthenticated. Redirecting to login page...');
+            window.location.href = LOGIN_PAGE_URL;
+            return;
+          } else {
+            throw new Error(`Server returned HTTP ${response.status}`);
+          }
+        } catch (error) {
+          console.error('Error fetching student profile:', error);
+          if (errorBanner && errorBannerText) {
+            errorBannerText.textContent = 'Unable to load your dashboard. Please check backend connection and refresh.';
+            errorBanner.style.display = 'flex';
+          }
+        } finally {
+          // Remove Loading Overlay after fetch completes
+          if (loadingOverlay) {
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => {
+              loadingOverlay.style.display = 'none';
+            }, 300);
+          }
+        }
       }
+
+      /**
+       * Handles user logout
+       */
+      function handleLogout(e) {
+        if (e) e.preventDefault();
+        window.location.href = `${API_BASE_URL}/logout`;
+      }
+
+      // Attach Logout event listeners
+      if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+      if (sidebarLogoutBtn) sidebarLogoutBtn.addEventListener('click', handleLogout);
+
+      // Execute dashboard loading sequence
+      await loadStudentProfile();
     });
   </script>
 </body>
