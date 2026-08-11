@@ -23,6 +23,12 @@ public interface AttemptRepository extends JpaRepository<Attempt, Long> {
 
     Long countByUserIdAndStatus(Long userId, AttemptStatus status);
 
+    long countByStatus(AttemptStatus status);
+
+    boolean existsByChallengeId(Long challengeId);
+
+    List<Attempt> findByChallengeId(Long challengeId);
+
     @Query("SELECT COALESCE(SUM(a.pointsEarned), 0) FROM Attempt a WHERE a.user.id = :userId AND (a.status = 'COMPLETED' OR a.status = 'EXPIRED')")
     Integer sumPointsEarnedByUserId(@Param("userId") Long userId);
 }

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sunday Challenge — Admin Attempt Logs">
+  <title>Attempt Logs — Sunday Challenge</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .table-responsive { width: 100%; overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+    .data-table th, .data-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); }
+    .data-table th { background: rgba(15, 23, 42, 0.6); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
+    .data-table tr:hover { background: rgba(255, 255, 255, 0.02); }
+  </style>
+</head>
+<body>
+
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading Attempt Logs...</div>
+  </div>
+
+  <header>
+    <nav class="navbar">
+      <a href="../index.html" class="brand">
+        <div class="brand-icon" style="background: linear-gradient(135deg, var(--accent-rose), #e11d48);">SC</div>
+        <div class="brand-title">Sunday <span>Admin</span></div>
+      </a>
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span class="stage-badge" style="background: rgba(244,63,94,0.15); color: #fda4af; border: 1px solid rgba(244,63,94,0.3);">👑 Administrator Portal</span>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.85rem;">Logout</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="dashboard-layout">
+      <aside class="sidebar">
+        <div class="sidebar-title">Admin Management</div>
+        <a href="admin-dashboard.html" class="sidebar-link"><span>📊 Dashboard</span></a>
+        <a href="admin-students.html" class="sidebar-link"><span>👥 Students</span></a>
+        <a href="admin-challenges.html" class="sidebar-link"><span>📝 Challenges</span></a>
+        <a href="admin-questions.html" class="sidebar-link"><span>❓ Questions</span></a>
+        <a href="admin-attempts.html" class="sidebar-link active"><span>⏱️ Attempts</span></a>
+        <a href="admin-leaderboard.html" class="sidebar-link"><span>🏆 Leaderboard</span></a>
+        <a href="admin-reports.html" class="sidebar-link"><span>📈 Reports</span></a>
+        <a href="#" id="sidebar-logout-btn" class="sidebar-link" style="color: var(--accent-rose); margin-top: 1rem;"><span>🚪 Logout</span></a>
+      </aside>
+
+      <div class="main-content">
+        <section class="card">
+          <div class="card-header">
+            <h1 class="card-title">⏱️ Student Attempt Logs</h1>
+            <span style="font-size: 0.85rem; color: var(--text-muted);" id="attempt-count-label">0 Total Attempts</span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Attempt ID</th>
+                  <th>Student Name / Roll No</th>
+                  <th>Challenge Title</th>
+                  <th>Status</th>
+                  <th>Score</th>
+                  <th>Points Earned</th>
+                  <th>Started At</th>
+                </tr>
+              </thead>
+              <tbody id="attempts-table-body">
+                <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading attempt logs...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>Sunday Challenge Platform — Admin Management System (Stage 5 Active)</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const API_BASE_URL = 'http://localhost:8080';
+      const loadingOverlay = document.getElementById('loading-overlay');
+      const tableBody = document.getElementById('attempts-table-body');
+      const countLabel = document.getElementById('attempt-count-label');
+
+      function formatDate(dateValue) {
+        if (!dateValue) return 'N/A';
+        try {
+          const d = new Date(dateValue);
+          return isNaN(d.getTime()) ? 'N/A' : d.toLocaleString();
+        } catch (e) { return 'N/A'; }
+      }
+
+      async function fetchAttempts() {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/admin/attempts`, { credentials: 'include' });
+          if (!res.ok) {
+            if (res.status === 401) { window.location.href = 'login.html'; return; }
+            throw new Error(`HTTP ${res.status}`);
+          }
+          const attempts = await res.json();
+          renderAttempts(attempts);
+        } catch (e) {
+          console.error(e);
+          tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--accent-rose); padding: 2rem;">Failed to load attempt logs.</td></tr>`;
+        } finally {
+          if (loadingOverlay) loadingOverlay.style.display = 'none';
+        }
+      }
+
+      function renderAttempts(attempts) {
+        countLabel.textContent = `${attempts ? attempts.length : 0} Total Attempts`;
+        if (!attempts || attempts.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem;">No student attempts logged yet.</td></tr>`;
+          return;
+        }
+        tableBody.innerHTML = attempts.map(a => `
+          <tr>
+            <td>#${a.attemptId}</td>
+            <td>
+              <div style="font-weight: 600;">${a.studentName || 'Student'}</div>
+              <div style="font-size: 0.75rem; color: var(--accent-cyan);">${a.username || ''}</div>
+            </td>
+            <td style="font-weight: 600;">${a.challengeTitle}</td>
+            <td>
+              <span class="badge-tag ${a.status === 'EXPIRED' ? 'hard' : (a.status === 'IN_PROGRESS' ? 'medium' : 'easy')}">
+                ${a.status}
+              </span>
+            </td>
+            <td>${a.status === 'IN_PROGRESS' ? 'In Progress' : `${a.score} / ${a.totalPoints}`}</td>
+            <td style="font-weight: 700; color: var(--accent-emerald);">${a.status === 'IN_PROGRESS' ? 'Pending' : `+${a.pointsEarned} pts`}</td>
+            <td style="color: var(--text-muted); font-size: 0.8rem;">${formatDate(a.startedAt)}</td>
+          </tr>
+        `).join('');
+      }
+
+      const logoutHandler = (e) => { e.preventDefault(); window.location.href = `${API_BASE_URL}/logout`; };
+      document.getElementById('logout-btn').addEventListener('click', logoutHandler);
+      document.getElementById('sidebar-logout-btn').addEventListener('click', logoutHandler);
+
+      await fetchAttempts();
+    });
+  </script>
+</body>
+</html>

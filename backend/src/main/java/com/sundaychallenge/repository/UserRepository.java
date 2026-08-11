@@ -1,9 +1,11 @@
 package com.sundaychallenge.repository;
 
+import com.sundaychallenge.entity.Role;
 import com.sundaychallenge.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -35,4 +37,20 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return Optional containing the User if found
      */
     Optional<User> findByUsername(String username);
+
+    /**
+     * Find all users by role.
+     *
+     * @param role User role
+     * @return List of matching users
+     */
+    List<User> findByRole(Role role);
+
+    /**
+     * Count users by role.
+     *
+     * @param role User role
+     * @return Count of matching users
+     */
+    long countByRole(Role role);
 }

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sunday Challenge — Admin Analytical Reports">
+  <title>Analytical Reports — Sunday Challenge</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .table-responsive { width: 100%; overflow-x: auto; margin-bottom: 2rem; }
+    .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+    .data-table th, .data-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); }
+    .data-table th { background: rgba(15, 23, 42, 0.6); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
+    .data-table tr:hover { background: rgba(255, 255, 255, 0.02); }
+  </style>
+</head>
+<body>
+
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading Analytical Reports...</div>
+  </div>
+
+  <header>
+    <nav class="navbar">
+      <a href="../index.html" class="brand">
+        <div class="brand-icon" style="background: linear-gradient(135deg, var(--accent-rose), #e11d48);">SC</div>
+        <div class="brand-title">Sunday <span>Admin</span></div>
+      </a>
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span class="stage-badge" style="background: rgba(244,63,94,0.15); color: #fda4af; border: 1px solid rgba(244,63,94,0.3);">👑 Administrator Portal</span>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.85rem;">Logout</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="dashboard-layout">
+      <aside class="sidebar">
+        <div class="sidebar-title">Admin Management</div>
+        <a href="admin-dashboard.html" class="sidebar-link"><span>📊 Dashboard</span></a>
+        <a href="admin-students.html" class="sidebar-link"><span>👥 Students</span></a>
+        <a href="admin-challenges.html" class="sidebar-link"><span>📝 Challenges</span></a>
+        <a href="admin-questions.html" class="sidebar-link"><span>❓ Questions</span></a>
+        <a href="admin-attempts.html" class="sidebar-link"><span>⏱️ Attempts</span></a>
+        <a href="admin-leaderboard.html" class="sidebar-link"><span>🏆 Leaderboard</span></a>
+        <a href="admin-reports.html" class="sidebar-link active"><span>📈 Reports</span></a>
+        <a href="#" id="sidebar-logout-btn" class="sidebar-link" style="color: var(--accent-rose); margin-top: 1rem;"><span>🚪 Logout</span></a>
+      </aside>
+
+      <div class="main-content">
+        <!-- Challenge Performance Breakdown -->
+        <section class="card" style="margin-bottom: 2rem;">
+          <div class="card-header">
+            <h2 class="card-title">📝 Challenge Performance Breakdown</h2>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Challenge Title</th>
+                  <th>Category</th>
+                  <th>Difficulty</th>
+                  <th>Attempts</th>
+                  <th>Completed</th>
+                  <th>Avg Accuracy</th>
+                  <th>Completion Rate</th>
+                </tr>
+              </thead>
+              <tbody id="challenge-reports-body">
+                <tr><td colspan="7" style="text-align: center; padding: 1.5rem;">Loading challenge reports...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Category Performance Breakdown -->
+        <section class="card">
+          <div class="card-header">
+            <h2 class="card-title">📚 Category Breakdown</h2>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Total Challenges</th>
+                  <th>Total Attempts</th>
+                  <th>Completed</th>
+                  <th>Avg Accuracy</th>
+                  <th>Completion Rate</th>
+                </tr>
+              </thead>
+              <tbody id="category-reports-body">
+                <tr><td colspan="6" style="text-align: center; padding: 1.5rem;">Loading category reports...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>Sunday Challenge Platform — Admin Management System (Stage 5 Active)</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const API_BASE_URL = 'http://localhost:8080';
+      const loadingOverlay = document.getElementById('loading-overlay');
+      const cBody = document.getElementById('challenge-reports-body');
+      const catBody = document.getElementById('category-reports-body');
+
+      async function fetchReports() {
+        try {
+          const [cRes, catRes] = await Promise.all([
+            fetch(`${API_BASE_URL}/api/admin/reports/challenges`, { credentials: 'include' }),
+            fetch(`${API_BASE_URL}/api/admin/reports/categories`, { credentials: 'include' })
+          ]);
+
+          if (cRes.ok) {
+            const cData = await cRes.json();
+            renderChallengeReports(cData);
+          }
+          if (catRes.ok) {
+            const catData = await catRes.json();
+            renderCategoryReports(catData);
+          }
+        } catch (e) {
+          console.error(e);
+        } finally {
+          if (loadingOverlay) loadingOverlay.style.display = 'none';
+        }
+      }
+
+      function renderChallengeReports(data) {
+        if (!data || data.length === 0) {
+          cBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 1.5rem;">No data recorded yet.</td></tr>`;
+          return;
+        }
+        cBody.innerHTML = data.map(r => `
+          <tr>
+            <td style="font-weight: 600;">${r.challengeTitle}</td>
+            <td><span class="badge-tag info">${r.category}</span></td>
+            <td><span class="badge-tag ${r.difficulty === 'HARD' ? 'hard' : (r.difficulty === 'MEDIUM' ? 'medium' : 'easy')}">${r.difficulty}</span></td>
+            <td>${r.totalAttempts}</td>
+            <td><span style="color: var(--accent-emerald); font-weight: 600;">${r.completedAttempts}</span></td>
+            <td>${r.averageScore}%</td>
+            <td><span style="font-weight: 700; color: var(--accent-cyan);">${r.completionRate}%</span></td>
+          </tr>
+        `).join('');
+      }
+
+      function renderCategoryReports(data) {
+        if (!data || data.length === 0) {
+          catBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 1.5rem;">No data recorded yet.</td></tr>`;
+          return;
+        }
+        catBody.innerHTML = data.map(r => `
+          <tr>
+            <td style="font-weight: 700; color: var(--accent-cyan);">${r.category}</td>
+            <td>${r.totalChallenges}</td>
+            <td>${r.totalAttempts}</td>
+            <td><span style="color: var(--accent-emerald); font-weight: 600;">${r.completedAttempts}</span></td>
+            <td>${r.averageScore}%</td>
+            <td><span style="font-weight: 700; color: var(--accent-cyan);">${r.completionRate}%</span></td>
+          </tr>
+        `).join('');
+      }
+
+      const logoutHandler = (e) => { e.preventDefault(); window.location.href = `${API_BASE_URL}/logout`; };
+      document.getElementById('logout-btn').addEventListener('click', logoutHandler);
+      document.getElementById('sidebar-logout-btn').addEventListener('click', logoutHandler);
+
+      await fetchReports();
+    });
+  </script>
+</body>
+</html>

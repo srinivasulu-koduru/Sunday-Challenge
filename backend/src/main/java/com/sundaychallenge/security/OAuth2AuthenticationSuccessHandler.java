@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -18,10 +19,13 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Collection;
 
 /**
  * Custom Authentication Success Handler that persists the SecurityContext
- * into the HTTP Session and redirects to the frontend Student Dashboard.
+ * into the HTTP Session and redirects users based on their authority:
+ * - ROLE_ADMIN -> admin-dashboard.html
+ * - ROLE_STUDENT -> student-dashboard.html
  */
 @Component
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -41,7 +45,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                        Authentication authentication) throws IOException, ServletException {
+                                         Authentication authentication) throws IOException, ServletException {
         // Explicitly store SecurityContext in SecurityContextRepository (HttpSession)
         SecurityContext context = SecurityContextHolder.getContext();
         context.setAuthentication(authentication);
@@ -50,11 +54,21 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         HttpSession session = request.getSession(false);
         String sessionId = (session != null) ? session.getId() : "NO_SESSION";
 
-        log.info("[DEBUG] OAuth2 Login Success! Principal: {}, Session ID: {}", 
-                authentication.getName(), sessionId);
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        boolean isAdmin = authorities.stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
 
-        String targetUrl = frontendUrl + "/pages/student-dashboard.html";
+        String targetUrl;
+        if (isAdmin) {
+            targetUrl = frontendUrl + "/pages/admin-dashboard.html";
+        } else {
+            targetUrl = frontendUrl + "/pages/student-dashboard.html";
+        }
+
+        log.info("[DEBUG] OAuth2 Login Success! Principal: {}, Authorities: {}, IsAdmin: {}, Session ID: {}",
+                authentication.getName(), authorities, isAdmin, sessionId);
         log.info("[DEBUG] Redirecting authenticated browser to: {}", targetUrl);
+
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 }
