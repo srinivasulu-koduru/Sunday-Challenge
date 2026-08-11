@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Set Your Username — Sunday Challenge">
+  <title>Set Username — Sunday Challenge</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .setup-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .setup-card {
+      max-width: 480px;
+      width: 100%;
+      background: var(--bg-card);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 2rem;
+      box-shadow: var(--glass-shadow);
+      text-align: center;
+    }
+    .setup-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--gradient-brand);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 1.5rem;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="setup-container">
+    <div class="setup-card">
+      <div class="setup-icon">🎓</div>
+      
+      <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem;">
+        Welcome to Sunday Challenge 🎉
+      </h1>
+      <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.75rem;">
+        Set your platform username or college roll number to identify you on test attempts, leaderboards, and results.
+      </p>
+
+      <!-- Error Alert Banner -->
+      <div id="error-banner" class="alert-banner danger" style="display: none; margin-bottom: 1.25rem; text-align: left;">
+        <span>⚠️</span>
+        <div id="error-text">Username is required</div>
+      </div>
+
+      <form id="username-form">
+        <div class="form-group" style="text-align: left;">
+          <label for="username-input" class="form-label">Username / Roll Number</label>
+          <input 
+            type="text" 
+            id="username-input" 
+            class="input-field" 
+            style="width: 100%; font-size: 1rem; padding: 0.75rem 1rem; text-transform: uppercase;" 
+            placeholder="e.g. 244G1A05CP" 
+            required 
+            autocomplete="off"
+            autofocus
+          />
+          <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.4rem;">
+            3-30 characters (letters, numbers, hyphens, underscores).
+          </div>
+        </div>
+
+        <button type="submit" id="continue-btn" class="btn" style="width: 100%; padding: 0.8rem; font-size: 1rem; margin-top: 0.75rem;">
+          Continue to Dashboard →
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const API_BASE_URL = 'http://localhost:8080';
+      const STUDENT_DASHBOARD_URL = 'student-dashboard.html';
+      const LOGIN_PAGE_URL = 'login.html';
+
+      const form = document.getElementById('username-form');
+      const input = document.getElementById('username-input');
+      const submitBtn = document.getElementById('continue-btn');
+      const errorBanner = document.getElementById('error-banner');
+      const errorText = document.getElementById('error-text');
+
+      // Verify Session Auth
+      try {
+        const userRes = await fetch(`${API_BASE_URL}/api/user/me`, { credentials: 'include' });
+        if (!userRes.ok) {
+          window.location.href = LOGIN_PAGE_URL;
+          return;
+        }
+        const user = await userRes.json();
+        if (user.username && user.username.trim() !== '') {
+          // Username already set, redirect directly to dashboard
+          window.location.href = STUDENT_DASHBOARD_URL;
+          return;
+        }
+      } catch (e) {
+        window.location.href = LOGIN_PAGE_URL;
+        return;
+      }
+
+      function showError(msg) {
+        errorText.textContent = msg;
+        errorBanner.style.display = 'flex';
+      }
+
+      function hideError() {
+        errorBanner.style.display = 'none';
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideError();
+
+        const rawVal = input.value.trim();
+        if (!rawVal) {
+          showError('Please enter a username or roll number.');
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving username...';
+
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/user/username`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({ username: rawVal })
+          });
+
+          const data = await res.json().catch(() => ({}));
+
+          if (res.ok && data.success) {
+            window.location.href = STUDENT_DASHBOARD_URL;
+          } else if (res.status === 409) {
+            showError(data.message || 'Username is already taken.');
+          } else if (res.status === 400) {
+            showError(data.message || 'Invalid username format.');
+          } else if (res.status === 401) {
+            window.location.href = LOGIN_PAGE_URL;
+          } else {
+            showError(data.message || 'Server error while saving username.');
+          }
+        } catch (err) {
+          console.error(err);
+          showError('Network error. Please try again.');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Continue to Dashboard →';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

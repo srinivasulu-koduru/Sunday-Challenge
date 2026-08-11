@@ -6,13 +6,134 @@
   <meta name="description" content="Sunday Challenge — Student Dashboard">
   <title>Student Dashboard — Sunday Challenge</title>
   <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* Dashboard specific avatar styling */
+    .avatar-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+    .user-avatar-img {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--accent-primary);
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+    }
+    .role-pill-overlay {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: var(--accent-cyan);
+      color: #090d16;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 0.15rem 0.5rem;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .profile-card-content {
+      display: flex;
+      align-items: center;
+      gap: 1.75rem;
+    }
+    .profile-details {
+      flex: 1;
+    }
+    .profile-name {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+    .profile-tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--accent-emerald);
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 0.15rem 0.6rem;
+      border-radius: 12px;
+      margin-bottom: 0.35rem;
+    }
+    .profile-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 0.85rem 1.1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .meta-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .meta-value {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+    }
+    .status-pill.online {
+      background: rgba(16, 185, 129, 0.15);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--accent-emerald);
+      box-shadow: 0 0 8px var(--accent-emerald);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--text-muted);
+    }
+    .empty-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .empty-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 0.25rem;
+    }
+    .empty-desc {
+      font-size: 0.875rem;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Fullscreen Loading Spinner Overlay -->
+  <!-- Loading Overlay -->
   <div id="loading-overlay" class="loading-overlay">
     <div class="spinner"></div>
-    <div class="loading-text">Loading your dashboard...</div>
+    <div class="loading-text">Authenticating session & loading dashboard...</div>
   </div>
 
   <!-- Header Navigation -->
@@ -23,15 +144,10 @@
         <div class="brand-title">Sunday <span>Challenge</span></div>
       </a>
 
-      <ul class="nav-links">
-        <li><a href="../index.html" class="nav-link">Home</a></li>
-        <li><a href="student-dashboard.html" class="nav-link active">Dashboard</a></li>
-        <li><a href="challenges.html" class="nav-link">Challenges</a></li>
-        <li><a href="my-results.html" class="nav-link">My Results</a></li>
-      </ul>
-
       <div style="display: flex; align-items: center; gap: 1rem;">
-        <span class="stage-badge">Stage 4 Active</span>
+        <a href="challenges.html" class="btn btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
+          📝 Challenges
+        </a>
         <button id="logout-btn" class="btn btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
           Logout
         </button>
@@ -39,51 +155,43 @@
     </nav>
   </header>
 
-  <!-- Dashboard Main Container -->
+  <!-- Main Container -->
   <main class="container">
 
-    <!-- Global Error Banner (Hidden by default) -->
+    <!-- Global Error Banner -->
     <div id="error-banner" class="alert-banner danger" style="display: none;">
       <span>⚠️</span>
-      <div id="error-banner-text">Unable to load your dashboard. Please try again.</div>
+      <div id="error-banner-text">Session verification failed. Please log in again.</div>
     </div>
 
-    <!-- Responsive Layout Grid: Sidebar + Main Content -->
+    <!-- Responsive Layout: Sidebar + Content -->
     <div class="dashboard-layout">
-      
-      <!-- Sidebar Navigation -->
+
+      <!-- Student Sidebar -->
       <aside class="sidebar">
-        <div class="sidebar-title">Student Menu</div>
+        <div class="sidebar-title">Menu</div>
         <a href="student-dashboard.html" class="sidebar-link active">
           <span>📊 Dashboard</span>
         </a>
         <a href="challenges.html" class="sidebar-link">
           <span>📝 Challenges</span>
         </a>
-        <a href="my-results.html" class="sidebar-link">
-          <span>🏆 My Results</span>
-        </a>
-        <a href="#profile-section" class="sidebar-link">
-          <span>👤 Profile</span>
-        </a>
+        <a href="my-results.html" class="sidebar-link"><span>🏆 My Results</span></a>
         <a href="#" id="sidebar-logout-btn" class="sidebar-link" style="color: var(--accent-rose); margin-top: 1rem;">
           <span>🚪 Logout</span>
         </a>
       </aside>
 
-      <!-- Main Dashboard Content -->
+      <!-- Main Content Area -->
       <div class="main-content">
-        
-        <!-- Welcome Hero Banner -->
+
+        <!-- Welcome Banner -->
         <section class="card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%);">
-          <div style="color: var(--accent-cyan); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.25rem;">
-            Student Portal
-          </div>
           <h1 id="welcome-title" class="hero-title" style="font-size: 2.1rem; text-align: left; margin-bottom: 0.35rem;">
             Welcome, Student 👋
           </h1>
           <p class="hero-desc" style="text-align: left; margin: 0; font-size: 0.95rem;">
-            Ready to continue your learning journey? Access your scheduled assessments and performance insights below.
+            Your authenticated session is active. Participate in weekly challenges and track your performance.
           </p>
         </section>
 
@@ -114,6 +222,10 @@
 
               <div class="profile-meta-grid">
                 <div class="meta-item">
+                  <span class="meta-label">Username / Roll No</span>
+                  <span id="user-username" class="meta-value" style="color: var(--accent-cyan); font-weight: 700;">Loading...</span>
+                </div>
+                <div class="meta-item">
                   <span class="meta-label">User ID</span>
                   <span id="user-id" class="meta-value">#SC----</span>
                 </div>
@@ -127,18 +239,17 @@
                 </div>
               </div>
             </div>
-
           </div>
         </section>
 
-        <!-- Statistics Overview Grid -->
+        <!-- Dashboard Statistics Grid -->
         <section style="margin-bottom: 1.75rem;">
           <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">
-            Assessment Overview
+            📈 Assessment Overview
           </h2>
-          
+
           <div class="stats-grid">
-            <!-- Stat 1: Total Challenges -->
+            <!-- Stat 1: Total Challenges Available -->
             <div class="stat-card">
               <div class="stat-info">
                 <span class="stat-value" id="stat-total-challenges">0</span>
@@ -207,6 +318,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       const API_BASE_URL = 'http://localhost:8080';
       const LOGIN_PAGE_URL = 'login.html';
+      const SET_USERNAME_URL = 'set-username.html';
 
       const loadingOverlay = document.getElementById('loading-overlay');
       const errorBanner = document.getElementById('error-banner');
@@ -214,6 +326,7 @@
 
       const welcomeTitle = document.getElementById('welcome-title');
       const userName = document.getElementById('user-name');
+      const userUsername = document.getElementById('user-username');
       const userEmail = document.getElementById('user-email');
       const userId = document.getElementById('user-id');
       const userRoleDisplay = document.getElementById('user-role-display');
@@ -259,8 +372,16 @@
           }
 
           const user = await profileRes.json();
+
+          // USERNAME GUARD: Redirect if user has not set username
+          if (!user.username || user.username.trim() === '') {
+            window.location.href = SET_USERNAME_URL;
+            return;
+          }
+
           welcomeTitle.textContent = `Welcome, ${user.name || 'Student'} 👋`;
           userName.textContent = user.name || 'Anonymous Student';
+          userUsername.textContent = user.username;
           userEmail.textContent = user.email || '';
           userId.textContent = `#SC-${user.id ? String(user.id).padStart(4, '0') : '0000'}`;
           userRoleDisplay.textContent = user.role || 'STUDENT';
@@ -300,11 +421,10 @@
             const attempts = await attemptsRes.json();
             renderRecentActivity(attempts);
           }
-
-        } catch (error) {
-          console.error('Error fetching dashboard:', error);
+        } catch (err) {
+          console.error('Error loading dashboard:', err);
           if (errorBanner && errorBannerText) {
-            errorBannerText.textContent = 'Unable to load dashboard data. Please check backend connection.';
+            errorBannerText.textContent = 'Failed to load user profile. Please try logging in again.';
             errorBanner.style.display = 'flex';
           }
         } finally {
@@ -316,32 +436,29 @@
       }
 
       function renderRecentActivity(attempts) {
-        if (!attempts || attempts.length === 0) {
-          return; // Keep default empty state
-        }
+        if (!attempts || attempts.length === 0) return;
+        const recent = attempts.slice(0, 5);
 
-        // Display top 3 recent attempts
-        const recentList = attempts.slice(0, 3);
-        recentActivityContainer.innerHTML = recentList.map(a => `
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-bottom: 1px solid var(--border-color); gap: 1rem;">
+        const rowsHtml = recent.map(att => `
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color);">
             <div>
-              <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--text-main); margin-bottom: 0.2rem;">
-                ${a.challengeTitle}
-              </div>
-              <div style="font-size: 0.8rem; color: var(--text-muted);">
-                ${formatDate(a.submittedAt)} • Status: <span style="color: ${a.status === 'EXPIRED' ? 'var(--accent-rose)' : 'var(--accent-emerald)'}">${a.status}</span>
+              <strong style="font-family: 'Outfit', sans-serif; font-size: 0.95rem;">${att.challengeTitle || 'Assessment'}</strong>
+              <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+                Attempt #${att.attemptId} • ${formatDate(att.startedAt)}
               </div>
             </div>
             <div style="text-align: right;">
-              <div style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--accent-primary);">
-                ${a.score}/${a.totalPoints}
-              </div>
-              <div style="font-size: 0.8rem; color: var(--accent-emerald); font-weight: 600;">
-                +${a.pointsEarned} pts
+              <span class="badge-tag ${att.status === 'EXPIRED' ? 'hard' : (att.status === 'IN_PROGRESS' ? 'medium' : 'easy')}">
+                ${att.status}
+              </span>
+              <div style="font-size: 0.85rem; font-weight: 700; color: var(--accent-emerald); margin-top: 0.2rem;">
+                ${att.status === 'IN_PROGRESS' ? 'In Progress' : `+${att.pointsEarned} pts (${att.score}/${att.totalPoints})`}
               </div>
             </div>
           </div>
         `).join('');
+
+        recentActivityContainer.innerHTML = `<div style="border-radius: var(--radius-md); border: 1px solid var(--border-color); overflow: hidden;">${rowsHtml}</div>`;
       }
 
       function handleLogout(e) {

@@ -31,6 +31,9 @@ public class User {
     @Column(name = "name")
     private String name;
 
+    @Column(name = "username", unique = true)
+    private String username;
+
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
@@ -60,6 +63,15 @@ public class User {
         this.role = role;
     }
 
+    public User(String googleId, String name, String username, String email, String profileImage, Role role) {
+        this.googleId = googleId;
+        this.name = name;
+        this.username = username;
+        this.email = email;
+        this.profileImage = profileImage;
+        this.role = role;
+    }
+
     // Getters and Setters
 
     public Long getId() {
@@ -84,6 +96,14 @@ public class User {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getEmail() {
