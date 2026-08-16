@@ -7,24 +7,28 @@
   <title>Attempt Logs — Sunday Challenge</title>
   <link rel="stylesheet" href="../css/style.css">
   <style>
+    /* Compact Layout Styling for Attempt Logs */
     .filter-section-card {
       background: var(--surface-card);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
-      padding: 1.25rem;
-      margin-bottom: 1.5rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.85rem;
     }
     .filter-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem;
       align-items: flex-end;
     }
+    .compact-card {
+      padding: 1rem 1.25rem;
+    }
     .table-responsive { width: 100%; overflow-x: auto; }
-    .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
-    .data-table th, .data-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); }
-    .data-table th { background: rgba(15, 23, 42, 0.6); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
-    .data-table tr:hover { background: rgba(255, 255, 255, 0.02); }
+    .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.825rem; }
+    .data-table th, .data-table td { padding: 0.45rem 0.65rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+    .data-table th { background: rgba(15, 23, 42, 0.7); color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.04em; }
+    .data-table tr:hover { background: rgba(255, 255, 255, 0.03); }
 
     .modal-overlay {
       position: fixed;
@@ -35,7 +39,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1.5rem;
+      padding: 1rem;
     }
     .modal-card {
       background: var(--bg-secondary);
@@ -45,14 +49,14 @@
       max-width: 800px;
       max-height: 90vh;
       overflow-y: auto;
-      padding: 1.75rem;
+      padding: 1.25rem;
     }
     .q-resp-box {
-      padding: 0.85rem 1rem;
+      padding: 0.65rem 0.85rem;
       border-radius: var(--radius-sm);
       background: rgba(15, 23, 42, 0.6);
       border: 1px solid var(--border-color);
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.6rem;
     }
   </style>
 </head>
@@ -73,7 +77,7 @@
       </a>
       <div style="display: flex; align-items: center; gap: 1rem;">
         <span class="stage-badge" style="background: rgba(244,63,94,0.15); color: #fda4af; border: 1px solid rgba(244,63,94,0.3);">👑 Administrator Portal</span>
-        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.85rem;">Logout</button>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">Logout</button>
       </div>
     </nav>
   </header>
@@ -95,12 +99,12 @@
       <div class="main-content">
 
         <!-- Active Challenge Attempts Prominent Banner -->
-        <section class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%);">
-          <div class="card-header" style="border: none; padding: 0; margin-bottom: 0.5rem;">
-            <h2 class="card-title" style="color: var(--accent-emerald);">⚡ Active Challenge Live Attempts</h2>
-            <span class="status-pill online"><span class="status-dot"></span> LIVE MONITORING</span>
+        <section class="card compact-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%); margin-bottom: 0.85rem;">
+          <div class="card-header" style="border: none; padding: 0; margin-bottom: 0.25rem;">
+            <h2 class="card-title" style="color: var(--accent-emerald); font-size: 1.1rem;">⚡ Active Challenge Live Attempts</h2>
+            <span class="status-pill online" style="font-size: 0.725rem; padding: 0.15rem 0.5rem;"><span class="status-dot"></span> LIVE MONITORING</span>
           </div>
-          <p id="active-challenges-banner-text" style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">
+          <p id="active-challenges-banner-text" style="margin: 0; font-size: 0.825rem; color: var(--text-muted);">
             Checking for currently active challenge attempts...
           </p>
         </section>
@@ -109,13 +113,13 @@
         <section class="filter-section-card">
           <div class="filter-grid">
             <div class="form-group" style="grid-column: span 2;">
-              <label class="form-label">Search Keyword</label>
-              <input type="text" id="search-input" class="form-control" placeholder="Search student name, roll number, email, or challenge title..." />
+              <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.2rem;">Search Keyword</label>
+              <input type="text" id="search-input" class="form-control" placeholder="Search student name, roll number, email, or challenge title..." style="padding: 0.45rem 0.75rem; font-size: 0.85rem;" />
             </div>
 
             <div class="form-group">
-              <label class="form-label">Attempt Status</label>
-              <select id="status-filter" class="form-control">
+              <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.2rem;">Attempt Status</label>
+              <select id="status-filter" class="form-control" style="padding: 0.45rem 0.75rem; font-size: 0.85rem;">
                 <option value="">All Statuses</option>
                 <option value="IN_PROGRESS">IN_PROGRESS</option>
                 <option value="COMPLETED">COMPLETED</option>
@@ -123,18 +127,18 @@
               </select>
             </div>
 
-            <div style="display: flex; gap: 0.5rem;">
-              <button id="search-btn" class="btn" style="padding: 0.75rem 1.25rem;">Search</button>
-              <button id="reset-btn" class="btn btn-secondary" style="padding: 0.75rem 1rem;">Reset</button>
+            <div style="display: flex; gap: 0.4rem;">
+              <button id="search-btn" class="btn" style="padding: 0.45rem 0.9rem; font-size: 0.825rem;">Search</button>
+              <button id="reset-btn" class="btn btn-secondary" style="padding: 0.45rem 0.75rem; font-size: 0.825rem;">Reset</button>
             </div>
           </div>
         </section>
 
         <!-- Attempts Table Card -->
-        <section class="card">
-          <div class="card-header">
-            <h1 class="card-title">⏱️ All Student Attempt Logs</h1>
-            <span style="font-size: 0.85rem; color: var(--text-muted);" id="attempt-count-label">0 Attempts Logged</span>
+        <section class="card compact-card">
+          <div class="card-header" style="margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);">
+            <h1 class="card-title" style="font-size: 1.15rem;">⏱️ All Student Attempt Logs</h1>
+            <span style="font-size: 0.8rem; color: var(--text-muted);" id="attempt-count-label">0 Attempts Logged</span>
           </div>
 
           <div class="table-responsive">
@@ -148,11 +152,11 @@
                   <th>Score</th>
                   <th>Points</th>
                   <th>Started At</th>
-                  <th>Inspect Response</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody id="attempts-table-body">
-                <tr><td colspan="8" style="text-align: center; padding: 2rem;">Loading attempt logs...</td></tr>
+                <tr><td colspan="8" style="text-align: center; padding: 1.5rem;">Loading attempt logs...</td></tr>
               </tbody>
             </table>
           </div>
@@ -165,12 +169,12 @@
   <!-- Question Detail Response Modal -->
   <div id="resp-modal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
-      <div class="card-header">
-        <h2 id="resp-modal-title" class="card-title">🔍 Attempt Question Responses Inspection</h2>
-        <button type="button" id="close-resp-modal-btn" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+      <div class="card-header" style="padding-bottom: 0.6rem; margin-bottom: 0.85rem;">
+        <h2 id="resp-modal-title" class="card-title" style="font-size: 1.15rem;">🔍 Attempt Question Responses Inspection</h2>
+        <button type="button" id="close-resp-modal-btn" style="background: none; border: none; color: var(--text-muted); font-size: 1.35rem; cursor: pointer;">&times;</button>
       </div>
 
-      <div id="resp-modal-summary" style="margin-bottom: 1.25rem; font-size: 0.9rem; color: var(--text-muted);">
+      <div id="resp-modal-summary" style="margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-muted); background: rgba(15, 23, 42, 0.6); padding: 0.6rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
         Loading response breakdown...
       </div>
 
@@ -178,8 +182,8 @@
         <!-- Question Response Breakdown Rendered Here -->
       </div>
 
-      <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
-        <button type="button" id="close-resp-btn" class="btn btn-secondary">Close Inspection</button>
+      <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+        <button type="button" id="close-resp-btn" class="btn btn-secondary" style="padding: 0.4rem 0.9rem; font-size: 0.825rem;">Close Inspection</button>
       </div>
     </div>
   </div>
@@ -215,7 +219,7 @@
         if (!dateValue) return 'N/A';
         try {
           const d = new Date(dateValue);
-          return isNaN(d.getTime()) ? 'N/A' : d.toLocaleString();
+          return isNaN(d.getTime()) ? 'N/A' : d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         } catch (e) { return 'N/A'; }
       }
 
@@ -236,7 +240,7 @@
           updateActiveBanner(attempts);
         } catch (e) {
           console.error(e);
-          tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--accent-rose); padding: 2rem;">Failed to load attempt logs.</td></tr>`;
+          tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--accent-rose); padding: 1.5rem;">Failed to load attempt logs.</td></tr>`;
         } finally {
           if (loadingOverlay) loadingOverlay.style.display = 'none';
         }
@@ -254,28 +258,28 @@
       function renderAttempts(attempts) {
         countLabel.textContent = `${attempts ? attempts.length : 0} Total Attempts`;
         if (!attempts || attempts.length === 0) {
-          tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">No student attempts match criteria.</td></tr>`;
+          tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 1.5rem; color: var(--text-muted);">No student attempts match criteria.</td></tr>`;
           return;
         }
 
         tableBody.innerHTML = attempts.map(a => `
           <tr>
-            <td style="font-weight: 700;">#${a.attemptId}</td>
+            <td style="font-weight: 700; color: var(--text-main);">#${a.attemptId}</td>
             <td>
-              <div style="font-weight: 600;">${a.studentName || 'Student'}</div>
-              <div style="font-size: 0.775rem; color: var(--accent-cyan);">${a.username || ''}</div>
+              <div style="font-weight: 600; line-height: 1.2;">${a.studentName || 'Student'}</div>
+              <div style="font-size: 0.725rem; color: var(--accent-cyan);">${a.username || ''}</div>
             </td>
             <td style="font-weight: 600;">${a.challengeTitle}</td>
             <td>
-              <span class="badge-tag ${a.status === 'EXPIRED' ? 'hard' : (a.status === 'IN_PROGRESS' ? 'medium' : 'easy')}">
+              <span class="badge-tag ${a.status === 'EXPIRED' ? 'hard' : (a.status === 'IN_PROGRESS' ? 'medium' : 'easy')}" style="font-size: 0.675rem; padding: 0.15rem 0.45rem;">
                 ${a.status}
               </span>
             </td>
             <td>${a.status === 'IN_PROGRESS' ? 'In Progress' : `${a.score} / ${a.totalPoints}`}</td>
             <td style="font-weight: 700; color: var(--accent-emerald);">${a.status === 'IN_PROGRESS' ? 'Pending' : `+${a.pointsEarned} pts`}</td>
-            <td style="color: var(--text-muted); font-size: 0.8rem;">${formatDate(a.startedAt)}</td>
+            <td style="color: var(--text-muted); font-size: 0.775rem;">${formatDate(a.startedAt)}</td>
             <td>
-              <button class="btn-xs btn-secondary inspect-btn" data-id="${a.attemptId}">🔍 Inspect</button>
+              <button class="btn-xs btn-secondary inspect-btn" data-id="${a.attemptId}" style="padding: 0.2rem 0.5rem; font-size: 0.725rem;">🔍 Inspect</button>
             </td>
           </tr>
         `).join('');
@@ -304,18 +308,18 @@
           `;
 
           if (!d.questionDetails || d.questionDetails.length === 0) {
-            respBody.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--text-muted);">No question response details recorded.</div>`;
+            respBody.innerHTML = `<div style="text-align: center; padding: 1.5rem; color: var(--text-muted);">No question response details recorded.</div>`;
           } else {
             respBody.innerHTML = d.questionDetails.map((q, idx) => `
               <div class="q-resp-box">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
-                  <strong>Q${idx + 1}. ${q.questionText}</strong>
-                  <span class="badge-tag ${q.correct ? 'easy' : 'hard'}">${q.correct ? 'CORRECT (+ ' + q.pointsEarned + ' pts)' : 'WRONG / UNANSWERED'}</span>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                  <strong style="font-size: 0.875rem;">Q${idx + 1}. ${q.questionText}</strong>
+                  <span class="badge-tag ${q.correct ? 'easy' : 'hard'}" style="font-size: 0.675rem; padding: 0.15rem 0.45rem;">${q.correct ? 'CORRECT (+ ' + q.pointsEarned + ' pts)' : 'WRONG / UNANSWERED'}</span>
                 </div>
-                <div style="font-size: 0.85rem; margin-top: 0.3rem;">
+                <div style="font-size: 0.8rem; line-height: 1.4;">
                   <div>👉 <strong>Student Selected:</strong> ${q.selectedOption ? 'Option ' + q.selectedOption : 'Unanswered'}</div>
                   <div>✅ <strong>Correct Option:</strong> Option ${q.correctOption}</div>
-                  ${q.explanation ? `<div style="color: var(--text-muted); margin-top: 0.3rem;">💡 <em>${q.explanation}</em></div>` : ''}
+                  ${q.explanation ? `<div style="color: var(--text-muted); margin-top: 0.25rem;">💡 <em>${q.explanation}</em></div>` : ''}
                 </div>
               </div>
             `).join('');

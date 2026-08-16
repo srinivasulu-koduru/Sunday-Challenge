@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sunday Challenge — Admin Access Control System">
+  <title>Admin Control — Sunday Challenge</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .admin-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.875rem;
+    }
+    .data-table th, .data-table td {
+      padding: 0.75rem 0.9rem;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+    .data-table th {
+      background: rgba(15, 23, 42, 0.7);
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+    }
+    .data-table tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(9, 13, 22, 0.88);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 540px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-xl);
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .toast {
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      box-shadow: var(--shadow-lg);
+      animation: slideIn 0.3s ease;
+    }
+    .toast.success { background: #065f46; color: #a7f3d0; border: 1px solid #059669; }
+    .toast.danger { background: #881337; color: #fecdd3; border: 1px solid #e11d48; }
+    @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Verifying admin permissions &amp; loading admin access list...</div>
+  </div>
+
+  <!-- Header Navigation -->
+  <header>
+    <nav class="navbar" aria-label="Main Navigation">
+      <a href="../index.html" class="brand">
+        <div class="brand-icon" style="background: linear-gradient(135deg, var(--accent-rose), #e11d48);">SC</div>
+        <div class="brand-title">Sunday <span>Admin</span></div>
+      </a>
+
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span class="stage-badge" style="background: rgba(244,63,94,0.15); color: #fda4af; border: 1px solid rgba(244,63,94,0.3);">
+          👑 Administrator Portal
+        </span>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.85rem;">Logout</button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container">
+    <div class="dashboard-layout">
+      <!-- Admin Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-title">Admin Management</div>
+        <a href="admin-dashboard.html" class="sidebar-link"><span>📊 Dashboard</span></a>
+        <a href="admin-students.html" class="sidebar-link"><span>🎓 Student Intelligence</span></a>
+        <a href="admin-roster.html" class="sidebar-link"><span>📋 College Roster</span></a>
+        <a href="admin-challenges.html" class="sidebar-link"><span>📝 Challenges</span></a>
+        <a href="admin-attempts.html" class="sidebar-link"><span>⏱️ Attempts</span></a>
+        <a href="admin-leaderboard.html" class="sidebar-link"><span>🏆 Leaderboard</span></a>
+        <a href="admin-reports.html" class="sidebar-link"><span>📈 Reports</span></a>
+        <a href="admin-control.html" class="sidebar-link active"><span>🔐 Admin Control</span></a>
+        <a href="#" id="sidebar-logout-btn" class="sidebar-link" style="color: var(--accent-rose); margin-top: 1rem;"><span>🚪 Logout</span></a>
+      </aside>
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Security Header Card -->
+        <section class="admin-card">
+          <div class="card-header" style="border: none; padding: 0; margin-bottom: 0.5rem;">
+            <h1 class="card-title" style="font-size: 1.3rem;">🔐 Admin Access Control Panel</h1>
+            <button id="open-add-admin-modal-btn" class="btn" style="padding: 0.45rem 0.95rem; font-size: 0.85rem;">+ Add Admin Email</button>
+          </div>
+          <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
+            Manage authorized administrator email accounts. Authorized emails dynamically receive <strong>ROLE_ADMIN</strong> upon Google OAuth authentication. The Primary Admin (<code>244g1a05cp@srit.ac.in</code>) is permanently protected.
+          </p>
+        </section>
+
+        <!-- Admin Access Table Card -->
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">👥 Authorized Administrator Accounts</h2>
+              <div id="admin-count-sub" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Loading admin list...</div>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Administrator Name</th>
+                  <th>Email Address</th>
+                  <th>Granted Role</th>
+                  <th>Status</th>
+                  <th>Added Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admins-table-body">
+                <tr><td colspan="6" style="text-align: center; padding: 2rem;">Loading authorized admins...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add Admin Modal -->
+  <div id="add-admin-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="card-header" style="padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);">
+        <h2 class="card-title" style="font-size: 1.15rem;">🔐 Add Authorized Administrator Email</h2>
+        <button type="button" id="close-modal-btn" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">&times;</button>
+      </div>
+
+      <div id="modal-error" class="alert-banner danger" style="display: none; margin-top: 1rem; font-size: 0.85rem;">
+        <span>⚠️</span>
+        <div id="modal-error-text">Error message</div>
+      </div>
+
+      <form id="add-admin-form" style="margin-top: 1rem;">
+        <div class="form-group full-width" style="margin-bottom: 1rem;">
+          <label class="form-label" for="admin-email-input" style="font-weight: 700;">Google OAuth Email Address <span style="color: var(--accent-rose);">*</span></label>
+          <input type="email" id="admin-email-input" class="form-control" placeholder="e.g. admin@srit.ac.in" required style="font-size: 0.9rem;" />
+          <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">This email will be granted ADMIN access when logging in through Google OAuth. No separate password required.</span>
+        </div>
+
+        <div class="form-group full-width" style="margin-bottom: 1.25rem;">
+          <label class="form-label" for="admin-name-input">Name / Description (Optional)</label>
+          <input type="text" id="admin-name-input" class="form-control" placeholder="e.g. T&P Head / Assistant Administrator" style="font-size: 0.9rem;" />
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end; padding-top: 0.85rem; border-top: 1px solid var(--border-color);">
+          <button type="button" id="cancel-modal-btn" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Cancel</button>
+          <button type="submit" id="save-admin-btn" class="btn" style="padding: 0.5rem 1.2rem; background: linear-gradient(135deg, var(--accent-rose), #e11d48);">
+            <span id="save-admin-btn-text">Grant Admin Access</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    <p>Sunday Challenge Platform — Admin Management System (Stage 5 Refined)</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const API_BASE_URL = 'http://localhost:8080';
+
+      const toastContainer = document.getElementById('toast-container');
+      const loadingOverlay = document.getElementById('loading-overlay');
+      const adminsTableBody = document.getElementById('admins-table-body');
+      const adminCountSub = document.getElementById('admin-count-sub');
+
+      const addAdminModal = document.getElementById('add-admin-modal');
+      const openAddAdminModalBtn = document.getElementById('open-add-admin-modal-btn');
+      const closeModalBtn = document.getElementById('close-modal-btn');
+      const cancelModalBtn = document.getElementById('cancel-modal-btn');
+
+      const addAdminForm = document.getElementById('add-admin-form');
+      const adminEmailInput = document.getElementById('admin-email-input');
+      const adminNameInput = document.getElementById('admin-name-input');
+      const saveAdminBtn = document.getElementById('save-admin-btn');
+      const saveAdminBtnText = document.getElementById('save-admin-btn-text');
+
+      const modalError = document.getElementById('modal-error');
+      const modalErrorText = document.getElementById('modal-error-text');
+
+      let currentAdminEmail = '';
+
+      function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<span>${type === 'success' ? '✅' : '⚠️'}</span> <div>${message}</div>`;
+        toastContainer.appendChild(toast);
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          setTimeout(() => toast.remove(), 300);
+        }, 4000);
+      }
+
+      async function verifyCurrentAdmin() {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/user/me`, { credentials: 'include' });
+          if (!res.ok) {
+            if (res.status === 401) { window.location.href = 'login.html'; return false; }
+            throw new Error(`HTTP ${res.status}`);
+          }
+          const u = await res.json();
+          if (u.role !== 'ADMIN') {
+            alert('Access Denied: Admin authorization required.');
+            window.location.href = 'student-dashboard.html';
+            return false;
+          }
+          currentAdminEmail = (u.email || '').toLowerCase();
+          return true;
+        } catch (e) {
+          console.error(e);
+          return false;
+        }
+      }
+
+      async function fetchAdmins() {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/admin/admins`, { credentials: 'include' });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+          const admins = await res.json();
+          renderAdminsTable(admins);
+        } catch (e) {
+          console.error(e);
+          adminsTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--accent-rose); padding: 1.5rem;">Failed to load authorized admin list.</td></tr>`;
+        } finally {
+          if (loadingOverlay) loadingOverlay.style.display = 'none';
+        }
+      }
+
+      function renderAdminsTable(admins) {
+        adminCountSub.textContent = `${admins ? admins.length : 0} Active Authorized Administrator Email Accounts`;
+
+        if (!admins || admins.length === 0) {
+          adminsTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">No authorized admins configured.</td></tr>`;
+          return;
+        }
+
+        adminsTableBody.innerHTML = admins.map(a => {
+          const isPrimary = a.primaryAdmin || a.email.toLowerCase() === '244g1a05cp@srit.ac.in';
+          const isSelf = a.email.toLowerCase() === currentAdminEmail;
+
+          return `
+            <tr>
+              <td style="font-weight: 700; color: var(--text-main);">
+                ${a.name || 'Administrator'}
+                ${isPrimary ? ' <span style="color: var(--accent-rose); font-size: 0.8rem;">👑 Primary Admin</span>' : ''}
+              </td>
+              <td style="font-weight: 600; color: var(--accent-cyan);">${a.email}</td>
+              <td><span class="badge-tag hard" style="font-size: 0.675rem;">${a.role || 'ADMIN'}</span></td>
+              <td><span class="badge-tag easy" style="font-size: 0.675rem;">${a.active ? 'ACTIVE' : 'INACTIVE'}</span></td>
+              <td style="color: var(--text-muted); font-size: 0.775rem;">${a.createdAt ? new Date(a.createdAt).toLocaleDateString() : 'N/A'}</td>
+              <td>
+                ${isPrimary ? '<span style="font-size: 0.75rem; color: var(--text-muted);">🔒 Permanent</span>' :
+                  (isSelf ? '<span style="font-size: 0.75rem; color: var(--text-muted);">👤 Current User</span>' :
+                  `<button class="btn-xs btn-secondary revoke-admin-btn" data-id="${a.id}" data-email="${a.email}" style="color: var(--accent-rose); padding: 0.2rem 0.55rem; font-size: 0.75rem;">🗑️ Revoke Access</button>`)}
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        document.querySelectorAll('.revoke-admin-btn').forEach(b => {
+          b.addEventListener('click', async (e) => {
+            const id = parseInt(e.target.getAttribute('data-id'));
+            const email = e.target.getAttribute('data-email');
+
+            if (!confirm(`Are you sure you want to revoke admin access for ${email}?\n\nThis will remove ADMIN privileges without deleting the user account.`)) {
+              return;
+            }
+
+            try {
+              const delRes = await fetch(`${API_BASE_URL}/api/admin/admins/${id}`, {
+                method: 'DELETE',
+                credentials: 'include'
+              });
+
+              if (delRes.ok) {
+                showToast(`Admin access for ${email} revoked successfully.`, 'success');
+                await fetchAdmins();
+              } else {
+                const err = await delRes.json().catch(() => ({}));
+                showToast(err.message || 'Failed to revoke admin access.', 'danger');
+              }
+            } catch (err) {
+              console.error(err);
+              showToast('Error revoking admin access.', 'danger');
+            }
+          });
+        });
+      }
+
+      function openModal() {
+        modalError.style.display = 'none';
+        addAdminForm.reset();
+        saveAdminBtn.disabled = false;
+        saveAdminBtnText.textContent = 'Grant Admin Access';
+        addAdminModal.style.display = 'flex';
+      }
+
+      function closeModal() {
+        addAdminModal.style.display = 'none';
+      }
+
+      openAddAdminModalBtn.addEventListener('click', openModal);
+      closeModalBtn.addEventListener('click', closeModal);
+      cancelModalBtn.addEventListener('click', closeModal);
+
+      addAdminForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        modalError.style.display = 'none';
+
+        const email = adminEmailInput.value.trim();
+        const name = adminNameInput.value.trim();
+
+        if (!email) {
+          modalErrorText.textContent = 'Please provide an email address.';
+          modalError.style.display = 'flex';
+          return;
+        }
+
+        saveAdminBtn.disabled = true;
+        saveAdminBtnText.textContent = '⏳ Saving...';
+
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/admin/admins`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ email, name })
+          });
+
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || `HTTP ${res.status}`);
+          }
+
+          closeModal();
+          showToast(`Admin access granted to ${email}.`, 'success');
+          await fetchAdmins();
+        } catch (err) {
+          console.error(err);
+          modalErrorText.textContent = err.message || 'Failed to grant admin access.';
+          modalError.style.display = 'flex';
+        } finally {
+          saveAdminBtn.disabled = false;
+          saveAdminBtnText.textContent = 'Grant Admin Access';
+        }
+      });
+
+      const logoutHandler = (e) => { e.preventDefault(); window.location.href = `${API_BASE_URL}/logout`; };
+      document.getElementById('logout-btn').addEventListener('click', logoutHandler);
+      document.getElementById('sidebar-logout-btn').addEventListener('click', logoutHandler);
+
+      try {
+        const isAuth = await verifyCurrentAdmin();
+        if (isAuth) {
+          await fetchAdmins();
+        }
+      } finally {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

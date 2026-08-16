@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service handling administrative operations, platform management, challenge scheduling,
@@ -63,6 +64,9 @@ public class AdminService {
     private final AttemptRepository attemptRepository;
     private final AttemptAnswerRepository attemptAnswerRepository;
     private final ChallengeService challengeService;
+    private final com.sundaychallenge.repository.StudentRosterRepository studentRosterRepository;
+
+    private final LeaderboardService leaderboardService;
 
     public AdminService(UserRepository userRepository,
                         ChallengeRepository challengeRepository,
@@ -70,7 +74,9 @@ public class AdminService {
                         ChallengeQuestionRepository challengeQuestionRepository,
                         AttemptRepository attemptRepository,
                         AttemptAnswerRepository attemptAnswerRepository,
-                        ChallengeService challengeService) {
+                        ChallengeService challengeService,
+                        com.sundaychallenge.repository.StudentRosterRepository studentRosterRepository,
+                        LeaderboardService leaderboardService) {
         this.userRepository = userRepository;
         this.challengeRepository = challengeRepository;
         this.questionRepository = questionRepository;
@@ -78,6 +84,81 @@ public class AdminService {
         this.attemptRepository = attemptRepository;
         this.attemptAnswerRepository = attemptAnswerRepository;
         this.challengeService = challengeService;
+        this.studentRosterRepository = studentRosterRepository;
+        this.leaderboardService = leaderboardService;
+    }
+
+    @Transactional(readOnly = true)
+    public com.sundaychallenge.dto.StudentIntelligenceStatsResponse getStudentIntelligenceStats() {
+        long totalCollegeRoster = studentRosterRepository.count();
+        List<User> students = userRepository.findByRole(Role.STUDENT);
+        long registeredStudents = students.size();
+
+        java.util.Set<String> registeredRolls = students.stream()
+                .map(User::getUsername)
+                .filter(u -> u != null && !u.isEmpty())
+                .map(String::toUpperCase)
+                .collect(Collectors.toSet());
+
+        java.util.Set<String> registeredEmails = students.stream()
+                .map(User::getEmail)
+                .filter(e -> e != null && !e.isEmpty())
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
+
+        long notRegisteredStudents = studentRosterRepository.findAll().stream()
+                .filter(r -> !registeredRolls.contains(r.getRollNumber().toUpperCase()) &&
+                             !registeredEmails.contains(r.getEmail().toLowerCase()))
+                .count();
+
+        long studentsParticipated = 0;
+        long studentsNeverParticipated = 0;
+
+        for (User student : students) {
+            long attemptsCount = attemptRepository.countByUserId(student.getId());
+            if (attemptsCount > 0) {
+                studentsParticipated++;
+            } else {
+                studentsNeverParticipated++;
+            }
+        }
+
+        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+        long activeStudents = students.stream()
+                .filter(s -> attemptRepository.existsByUserIdAndStartedAtAfter(s.getId(), thirtyDaysAgo))
+                .count();
+
+        long totalAttempts = attemptRepository.count();
+        long completedAttempts = attemptRepository.countByStatus(AttemptStatus.COMPLETED);
+
+        List<Attempt> finishedAttempts = attemptRepository.findAll().stream()
+                .filter(a -> a.getStatus() == AttemptStatus.COMPLETED || a.getStatus() == AttemptStatus.EXPIRED)
+                .toList();
+
+        double averageScore = 0.0;
+        if (!finishedAttempts.isEmpty()) {
+            double totalPct = finishedAttempts.stream()
+                    .mapToDouble(a -> a.getTotalPoints() > 0 ? (double) a.getScore() / a.getTotalPoints() * 100.0 : 0.0)
+                    .sum();
+            averageScore = Math.round((totalPct / finishedAttempts.size()) * 100.0) / 100.0;
+        }
+
+        double completionRate = 0.0;
+        if (totalAttempts > 0) {
+            completionRate = Math.round(((double) completedAttempts / totalAttempts * 100.0) * 100.0) / 100.0;
+        }
+
+        return new com.sundaychallenge.dto.StudentIntelligenceStatsResponse(
+                totalCollegeRoster,
+                registeredStudents,
+                notRegisteredStudents,
+                studentsParticipated,
+                studentsNeverParticipated,
+                activeStudents,
+                totalAttempts,
+                averageScore,
+                completionRate
+        );
     }
 
     @Transactional(readOnly = true)
@@ -400,8 +481,8 @@ public class AdminService {
 
         if (attemptAnswerRepository.existsByQuestionId(id)) {
             log.warn("[ADMIN] Rejecting deletion of question ID: {} because student attempt answers reference it.", id);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Cannot delete question because it is referenced in past student attempts.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Cannot delete question because it is referenced in past student attempts. Historical student performance data must be preserved.");
         }
 
         List<ChallengeQuestion> cqList = challengeQuestionRepository.findAll().stream()
@@ -476,11 +557,21 @@ public class AdminService {
     }
 
     // =========================================================================
-    // STUDENT MANAGEMENT
+    // STUDENT MANAGEMENT & T&P INTELLIGENCE
     // =========================================================================
 
     @Transactional(readOnly = true)
     public List<AdminStudentResponse> getAllStudents(String query) {
+        return getFilteredStudents(query, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminStudentResponse> getNeverParticipatedStudents() {
+        return getFilteredStudents(null, "NEVER_PARTICIPATED", null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminStudentResponse> getFilteredStudents(String query, String participationFilter, String performanceFilter) {
         List<User> students = userRepository.findByRole(Role.STUDENT);
 
         if (query != null && !query.trim().isEmpty()) {
@@ -496,6 +587,15 @@ public class AdminService {
         for (User student : students) {
             List<Attempt> attempts = attemptRepository.findByUserIdOrderByStartedAtDesc(student.getId());
             long totalAttempts = attempts.size();
+
+            // Participation filtering
+            if ("PARTICIPATED".equalsIgnoreCase(participationFilter) && totalAttempts == 0) {
+                continue;
+            }
+            if ("NEVER_PARTICIPATED".equalsIgnoreCase(participationFilter) && totalAttempts > 0) {
+                continue;
+            }
+
             long completed = attempts.stream().filter(a -> a.getStatus() == AttemptStatus.COMPLETED).count();
 
             int totalPoints = attempts.stream()
@@ -514,6 +614,17 @@ public class AdminService {
                 avgScore = Math.round((pctSum / finished.size()) * 100.0) / 100.0;
             }
 
+            // Performance filtering
+            if ("HIGH".equalsIgnoreCase(performanceFilter) && avgScore < 75.0) {
+                continue;
+            }
+            if ("MEDIUM".equalsIgnoreCase(performanceFilter) && (avgScore < 40.0 || avgScore >= 75.0)) {
+                continue;
+            }
+            if ("LOW".equalsIgnoreCase(performanceFilter) && avgScore >= 40.0) {
+                continue;
+            }
+
             list.add(new AdminStudentResponse(
                     student.getId(),
                     student.getUsername(),
@@ -529,6 +640,35 @@ public class AdminService {
         }
 
         return list;
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] exportStudentsCsv(String query, String participationFilter, String performanceFilter) {
+        List<AdminStudentResponse> students = getFilteredStudents(query, participationFilter, performanceFilter);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("ID,Roll Number,Name,Email,Registration Date,Total Attempts,Completed Challenges,Total Points,Average Score (%),Participation\n");
+
+        for (AdminStudentResponse s : students) {
+            String roll = s.username() != null ? s.username() : "N/A";
+            String name = s.name() != null ? s.name().replace(",", " ") : "Student";
+            String email = s.email() != null ? s.email() : "";
+            String regDate = s.createdAt() != null ? s.createdAt().toString() : "";
+            String participation = s.totalAttempts() > 0 ? "PARTICIPATED" : "NEVER_PARTICIPATED";
+
+            sb.append(s.id()).append(",")
+              .append(roll).append(",")
+              .append("\"").append(name).append("\",")
+              .append(email).append(",")
+              .append(regDate).append(",")
+              .append(s.totalAttempts()).append(",")
+              .append(s.completedChallenges()).append(",")
+              .append(s.totalPoints()).append(",")
+              .append(s.averageScore()).append(",")
+              .append(participation).append("\n");
+        }
+
+        return sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
     }
 
     @Transactional(readOnly = true)
@@ -689,63 +829,7 @@ public class AdminService {
 
     @Transactional(readOnly = true)
     public List<LeaderboardEntryResponse> getLeaderboard() {
-        List<User> students = userRepository.findByRole(Role.STUDENT);
-
-        List<LeaderboardEntryResponse> rawList = new ArrayList<>();
-        for (User student : students) {
-            List<Attempt> attempts = attemptRepository.findByUserIdOrderByStartedAtDesc(student.getId());
-
-            int totalPoints = attempts.stream()
-                    .filter(a -> a.getStatus() == AttemptStatus.COMPLETED || a.getStatus() == AttemptStatus.EXPIRED)
-                    .mapToInt(Attempt::getPointsEarned)
-                    .sum();
-
-            long completed = attempts.stream().filter(a -> a.getStatus() == AttemptStatus.COMPLETED).count();
-
-            double avgScore = 0.0;
-            List<Attempt> finished = attempts.stream()
-                    .filter(a -> a.getStatus() == AttemptStatus.COMPLETED || a.getStatus() == AttemptStatus.EXPIRED)
-                    .toList();
-            if (!finished.isEmpty()) {
-                double pctSum = finished.stream()
-                        .mapToDouble(a -> a.getTotalPoints() > 0 ? (double) a.getScore() / a.getTotalPoints() * 100.0 : 0.0)
-                        .sum();
-                avgScore = Math.round((pctSum / finished.size()) * 100.0) / 100.0;
-            }
-
-            rawList.add(new LeaderboardEntryResponse(
-                    0,
-                    student.getId(),
-                    student.getUsername() != null ? student.getUsername() : "N/A",
-                    student.getName(),
-                    totalPoints,
-                    completed,
-                    avgScore
-            ));
-        }
-
-        rawList.sort(Comparator
-                .comparing(LeaderboardEntryResponse::totalPoints).reversed()
-                .thenComparing(Comparator.comparing(LeaderboardEntryResponse::completedChallenges).reversed())
-                .thenComparing(Comparator.comparing(LeaderboardEntryResponse::averageScore).reversed())
-                .thenComparing(LeaderboardEntryResponse::username)
-        );
-
-        List<LeaderboardEntryResponse> rankedList = new ArrayList<>();
-        int rank = 1;
-        for (LeaderboardEntryResponse entry : rawList) {
-            rankedList.add(new LeaderboardEntryResponse(
-                    rank++,
-                    entry.userId(),
-                    entry.username(),
-                    entry.name(),
-                    entry.totalPoints(),
-                    entry.completedChallenges(),
-                    entry.averageScore()
-            ));
-        }
-
-        return rankedList;
+        return leaderboardService.getLeaderboardPage(null, null, null, "ALL_TIME", null, null, 0, 1000, null).entries();
     }
 
     // =========================================================================

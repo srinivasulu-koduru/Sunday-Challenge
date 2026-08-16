@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sunday Challenge — Official Platform Leaderboard & Student Rankings">
+  <title>Leaderboard — Sunday Challenge</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* Leaderboard Custom Styling */
+    .user-position-banner {
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.15), rgba(15, 23, 42, 0.8));
+      border: 1px solid rgba(244, 63, 94, 0.35);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .position-rank-box {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .position-badge {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #ffffff;
+      background: var(--accent-rose);
+      padding: 0.2rem 1.2rem;
+      border-radius: var(--radius-md);
+      box-shadow: 0 4px 16px rgba(244, 63, 94, 0.4);
+    }
+    .user-metrics-strip {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .metric-box {
+      display: flex;
+      flex-direction: column;
+    }
+    .metric-lbl {
+      font-size: 0.725rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .metric-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    /* Top 3 Podium Section */
+    .podium-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.75rem;
+    }
+    .podium-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: transform var(--transition-fast), border-color var(--transition-fast);
+    }
+    .podium-card:hover {
+      transform: translateY(-4px);
+    }
+    .podium-card.rank-1 {
+      border-color: rgba(245, 158, 11, 0.5);
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.12), var(--surface-card));
+    }
+    .podium-card.rank-2 {
+      border-color: rgba(148, 163, 184, 0.5);
+      background: linear-gradient(180deg, rgba(148, 163, 184, 0.12), var(--surface-card));
+    }
+    .podium-card.rank-3 {
+      border-color: rgba(180, 83, 9, 0.5);
+      background: linear-gradient(180deg, rgba(180, 83, 9, 0.12), var(--surface-card));
+    }
+    .crown-icon {
+      font-size: 1.8rem;
+      margin-bottom: 0.25rem;
+    }
+    .podium-avatar {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 0.5rem auto;
+      border: 3px solid var(--border-color);
+    }
+    .rank-1 .podium-avatar { border-color: #f59e0b; box-shadow: 0 0 16px rgba(245, 158, 11, 0.4); }
+    .rank-2 .podium-avatar { border-color: #94a3b8; box-shadow: 0 0 16px rgba(148, 163, 184, 0.4); }
+    .rank-3 .podium-avatar { border-color: #b45309; box-shadow: 0 0 16px rgba(180, 83, 9, 0.4); }
+
+    .podium-name {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-top: 0.25rem;
+    }
+    .podium-roll {
+      font-size: 0.8rem;
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+    .podium-points {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--accent-emerald);
+      margin-top: 0.5rem;
+    }
+
+    /* Filter & Table Styling */
+    .filter-panel {
+      background: var(--surface-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.75rem;
+      align-items: flex-end;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.875rem;
+    }
+    .data-table th, .data-table td {
+      padding: 0.75rem 0.9rem;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+    .data-table th {
+      background: rgba(15, 23, 42, 0.7);
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.725rem;
+      letter-spacing: 0.05em;
+    }
+    .data-table tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .rank-cell-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 0.875rem;
+    }
+    .badge-r1 { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+    .badge-r2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: #fff; }
+    .badge-r3 { background: linear-gradient(135deg, #b45309, #78350f); color: #fff; }
+    .badge-rother { background: rgba(255, 255, 255, 0.08); color: var(--text-muted); }
+    .avatar-initial {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      margin: 0.4rem auto;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Calculating backend rankings &amp; statistics...</div>
+  </div>
+
+  <!-- Header Navigation -->
+  <header>
+    <nav class="navbar" aria-label="Main Navigation">
+      <a href="../index.html" class="brand">
+        <div class="brand-icon">SC</div>
+        <div class="brand-title">Sunday <span>Challenge</span></div>
+      </a>
+
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <a href="student-dashboard.html" class="nav-link">Dashboard</a>
+        <a href="challenges.html" class="nav-link">Challenges</a>
+        <a href="my-results.html" class="nav-link">My Results</a>
+        <a href="leaderboard.html" class="nav-link active">Leaderboard</a>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.4rem 0.9rem; font-size: 0.85rem;">Logout</button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container">
+    <!-- User Position Summary Card -->
+    <div id="user-position-card" class="user-position-banner" style="display: none;">
+      <div class="position-rank-box">
+        <div>
+          <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">YOUR POSITION</span>
+          <div id="user-rank-display" class="position-badge">#--</div>
+        </div>
+        <div>
+          <h2 id="user-name-display" style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin: 0; color: var(--text-main);">Student Name</h2>
+          <span id="user-roll-display" style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600;">--</span>
+        </div>
+      </div>
+
+      <div class="user-metrics-strip">
+        <div class="metric-box">
+          <span class="metric-lbl">Total Points</span>
+          <span id="user-points-display" class="metric-val" style="color: var(--accent-emerald);">0 pts</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-lbl">Avg Accuracy</span>
+          <span id="user-avg-display" class="metric-val">0.0%</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-lbl">Best Score</span>
+          <span id="user-best-display" class="metric-val">0 pts</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-lbl">Completed</span>
+          <span id="user-completed-display" class="metric-val">0 Tests</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header Banner -->
+    <section class="card" style="margin-bottom: 1.5rem;">
+      <div class="card-header" style="border: none; padding: 0; margin-bottom: 0.5rem;">
+        <h1 class="card-title" style="font-size: 1.5rem;">🏆 Official Student Performance Leaderboard</h1>
+        <span style="font-size: 0.825rem; color: var(--text-muted);">Authoritative Backend Rankings</span>
+      </div>
+      <p style="margin: 0; font-size: 0.875rem; color: var(--text-muted);">
+        Real-time academic rankings calculated directly from completed assessment attempts on the Sunday Challenge platform.
+      </p>
+    </section>
+
+    <!-- Top 3 Podium Section -->
+    <section id="podium-section" class="podium-container" style="display: none;">
+      <!-- Rank 2 -->
+      <div id="podium-2" class="podium-card rank-2" style="display: none;">
+        <div class="crown-icon">🥈</div>
+        <span class="badge-tag category" style="font-size: 0.7rem;">RANK #2</span>
+        <div id="podium-2-avatar-container" style="display: flex; justify-content: center; margin: 0.4rem 0;"></div>
+        <div id="podium-2-name" class="podium-name">--</div>
+        <div id="podium-2-roll" class="podium-roll">--</div>
+        <div id="podium-2-pts" class="podium-points">0 pts</div>
+        <div id="podium-2-sub" style="font-size: 0.775rem; color: var(--text-muted); margin-top: 0.25rem;">--</div>
+      </div>
+
+      <!-- Rank 1 -->
+      <div id="podium-1" class="podium-card rank-1" style="display: none;">
+        <div class="crown-icon">🥇</div>
+        <span class="badge-tag hard" style="font-size: 0.75rem; background: rgba(245,158,11,0.2); color: #fde68a;">CHAMPION #1</span>
+        <div id="podium-1-avatar-container" style="display: flex; justify-content: center; margin: 0.4rem 0;"></div>
+        <div id="podium-1-name" class="podium-name">--</div>
+        <div id="podium-1-roll" class="podium-roll">--</div>
+        <div id="podium-1-pts" class="podium-points">0 pts</div>
+        <div id="podium-1-sub" style="font-size: 0.775rem; color: var(--text-muted); margin-top: 0.25rem;">--</div>
+      </div>
+
+      <!-- Rank 3 -->
+      <div id="podium-3" class="podium-card rank-3" style="display: none;">
+        <div class="crown-icon">🥉</div>
+        <span class="badge-tag category" style="font-size: 0.7rem;">RANK #3</span>
+        <div id="podium-3-avatar-container" style="display: flex; justify-content: center; margin: 0.4rem 0;"></div>
+        <div id="podium-3-name" class="podium-name">--</div>
+        <div id="podium-3-roll" class="podium-roll">--</div>
+        <div id="podium-3-pts" class="podium-points">0 pts</div>
+        <div id="podium-3-sub" style="font-size: 0.775rem; color: var(--text-muted); margin-top: 0.25rem;">--</div>
+      </div>
+    </section>
+
+    <!-- Filters & Search Panel -->
+    <section class="filter-panel">
+      <div class="filter-grid">
+        <div class="form-group" style="grid-column: span 2;">
+          <label class="form-label" style="font-size: 0.75rem;">Search Student</label>
+          <input type="text" id="filter-search" class="form-control" placeholder="Search Roll Number (e.g. 244G1A05CP) or Name..." style="padding: 0.45rem 0.75rem; font-size: 0.85rem;" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-size: 0.75rem;">Time Period</label>
+          <select id="filter-period" class="form-control" style="padding: 0.45rem 0.75rem; font-size: 0.85rem;">
+            <option value="ALL_TIME">All Time</option>
+            <option value="THIS_WEEK">This Week</option>
+            <option value="THIS_MONTH">This Month</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-size: 0.75rem;">Category</label>
+          <select id="filter-category" class="form-control" style="padding: 0.45rem 0.75rem; font-size: 0.85rem;">
+            <option value="">All Categories</option>
+            <option value="APTITUDE">Aptitude</option>
+            <option value="REASONING">Reasoning</option>
+            <option value="CODING">Coding</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-size: 0.75rem;">Difficulty</label>
+          <select id="filter-difficulty" class="form-control" style="padding: 0.45rem 0.75rem; font-size: 0.85rem;">
+            <option value="">All Difficulties</option>
+            <option value="EASY">Easy</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HARD">Hard</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 0.4rem;">
+          <button id="apply-filter-btn" class="btn" style="padding: 0.45rem 0.85rem; font-size: 0.825rem;">Apply Filters</button>
+          <button id="reset-filter-btn" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.825rem;">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Leaderboard Table Card -->
+    <section class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+        <span id="page-summary-label" style="font-size: 0.825rem; color: var(--text-muted);">Loading rankings...</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Student Name</th>
+              <th>Roll Number</th>
+              <th>Attempted</th>
+              <th>Completed</th>
+              <th>Avg Score</th>
+              <th>Best Score</th>
+              <th>Total Points</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-table-body">
+            <tr><td colspan="9" style="text-align: center; padding: 2rem;">Loading leaderboard data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Bar -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+        <button id="prev-page-btn" class="btn btn-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;" disabled>&larr; Previous</button>
+        <span id="page-num-indicator" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Page 1</span>
+        <button id="next-page-btn" class="btn btn-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;" disabled>Next &rarr;</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Sunday Challenge Platform — Official Leaderboard (Stage 5 Active)</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const API_BASE_URL = 'http://localhost:8080';
+
+      const loadingOverlay = document.getElementById('loading-overlay');
+
+      const userPositionCard = document.getElementById('user-position-card');
+      const userRankDisplay = document.getElementById('user-rank-display');
+      const userNameDisplay = document.getElementById('user-name-display');
+      const userRollDisplay = document.getElementById('user-roll-display');
+      const userPointsDisplay = document.getElementById('user-points-display');
+      const userAvgDisplay = document.getElementById('user-avg-display');
+      const userBestDisplay = document.getElementById('user-best-display');
+      const userCompletedDisplay = document.getElementById('user-completed-display');
+
+      const podiumSection = document.getElementById('podium-section');
+
+      const filterSearch = document.getElementById('filter-search');
+      const filterPeriod = document.getElementById('filter-period');
+      const filterCategory = document.getElementById('filter-category');
+      const filterDifficulty = document.getElementById('filter-difficulty');
+      const applyFilterBtn = document.getElementById('apply-filter-btn');
+      const resetFilterBtn = document.getElementById('reset-filter-btn');
+
+      const pageSummaryLabel = document.getElementById('page-summary-label');
+      const leaderboardTableBody = document.getElementById('leaderboard-table-body');
+      const prevPageBtn = document.getElementById('prev-page-btn');
+      const nextPageBtn = document.getElementById('next-page-btn');
+      const pageNumIndicator = document.getElementById('page-num-indicator');
+
+      let currentPage = 0;
+      let totalPages = 1;
+      const pageSize = 20;
+
+      async function fetchLeaderboard() {
+        try {
+          let url = `${API_BASE_URL}/api/leaderboard?page=${currentPage}&size=${pageSize}`;
+          if (filterSearch.value.trim()) url += `&search=${encodeURIComponent(filterSearch.value.trim())}`;
+          if (filterPeriod.value) url += `&period=${filterPeriod.value}`;
+          if (filterCategory.value) url += `&category=${filterCategory.value}`;
+          if (filterDifficulty.value) url += `&difficulty=${filterDifficulty.value}`;
+
+          const res = await fetch(url, { credentials: 'include' });
+          if (!res.ok) {
+            if (res.status === 401) { window.location.href = 'login.html'; return; }
+            throw new Error(`HTTP ${res.status}`);
+          }
+
+          const data = await res.json();
+          renderUserPosition(data.currentUserPosition);
+          renderPodium(data.topThree);
+          renderTable(data.entries, data.totalElements || data.totalStudents);
+          updatePagination(data.currentPage, data.totalPages);
+        } catch (e) {
+          console.error(e);
+          leaderboardTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--accent-rose); padding: 2rem;">Failed to load leaderboard rankings.</td></tr>`;
+        } finally {
+          if (loadingOverlay) loadingOverlay.style.display = 'none';
+        }
+      }
+
+      function renderUserPosition(pos) {
+        if (!pos) {
+          userPositionCard.style.display = 'none';
+          return;
+        }
+
+        userRankDisplay.textContent = `#${pos.rank}`;
+        userNameDisplay.textContent = pos.name || 'Student';
+        userRollDisplay.textContent = pos.username || 'N/A';
+        userPointsDisplay.textContent = `${pos.totalPoints} pts`;
+        userAvgDisplay.textContent = `${pos.averageScore}%`;
+        userBestDisplay.textContent = `${pos.bestScore} pts`;
+        userCompletedDisplay.textContent = `${pos.completedChallenges} Tests`;
+        userPositionCard.style.display = 'flex';
+      }
+
+      function getAvatarHtml(name, profileImage, size = 64) {
+        const initial = (name && name.trim().length > 0) ? name.trim().charAt(0).toUpperCase() : 'S';
+        const colors = [
+          'linear-gradient(135deg, #6366f1, #4f46e5)',
+          'linear-gradient(135deg, #06b6d4, #0891b2)',
+          'linear-gradient(135deg, #10b981, #059669)',
+          'linear-gradient(135deg, #f59e0b, #d97706)',
+          'linear-gradient(135deg, #ec4899, #db2777)',
+          'linear-gradient(135deg, #8b5cf6, #7c3aed)'
+        ];
+        const charCode = initial.charCodeAt(0);
+        const color = colors[charCode % colors.length];
+
+        if (profileImage && profileImage.trim().length > 0 && !profileImage.includes('placeholder')) {
+          return `<img src="${profileImage}" alt="${name || 'Student'}" style="width:${size}px; height:${size}px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.2);" onerror="this.onerror=null; this.outerHTML='<div class=\\'avatar-initial\\' style=\\'width:${size}px; height:${size}px; background:${color}; font-size:${Math.round(size*0.45)}px;\\'>${initial}</div>';" />`;
+        } else {
+          return `<div class="avatar-initial" style="width:${size}px; height:${size}px; background:${color}; font-size:${Math.round(size*0.45)}px;">${initial}</div>`;
+        }
+      }
+
+      function renderPodium(top3) {
+        if (!top3 || top3.length === 0) {
+          podiumSection.style.display = 'none';
+          return;
+        }
+
+        podiumSection.style.display = 'grid';
+        [1, 2, 3].forEach(r => {
+          const card = document.getElementById(`podium-${r}`);
+          const entry = top3.find(e => e.rank === r);
+          if (entry) {
+            const avatarContainer = document.getElementById(`podium-${r}-avatar-container`);
+            if (avatarContainer) {
+              avatarContainer.innerHTML = getAvatarHtml(entry.name, entry.profileImage, r === 1 ? 70 : 60);
+            }
+            document.getElementById(`podium-${r}-name`).textContent = entry.name || 'Student';
+            document.getElementById(`podium-${r}-roll`).textContent = entry.username || 'N/A';
+            document.getElementById(`podium-${r}-pts`).textContent = `${entry.totalPoints} pts`;
+            document.getElementById(`podium-${r}-sub`).textContent = `${entry.completedChallenges} Completed | ${entry.averageScore}% Accuracy`;
+            card.style.display = 'block';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      }
+
+      function renderTable(entries, total) {
+        pageSummaryLabel.textContent = `Showing ${entries ? entries.length : 0} Ranked Entries (Total Students: ${total || 0})`;
+
+        if (!entries || entries.length === 0) {
+          leaderboardTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">No student rankings match current filter criteria.</td></tr>`;
+          return;
+        }
+
+        leaderboardTableBody.innerHTML = entries.map(e => {
+          let badgeClass = 'badge-rother';
+          if (e.rank === 1) badgeClass = 'badge-r1';
+          else if (e.rank === 2) badgeClass = 'badge-r2';
+          else if (e.rank === 3) badgeClass = 'badge-r3';
+
+          return `
+            <tr>
+              <td><span class="rank-cell-badge ${badgeClass}">${e.rank}</span></td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                  ${getAvatarHtml(e.name, e.profileImage, 32)}
+                  <span style="font-weight: 700; color: var(--text-main);">${e.name || 'Student'}</span>
+                </div>
+              </td>
+              <td style="font-weight: 700; color: var(--accent-cyan);">${e.username}</td>
+              <td style="font-weight: 600;">${e.attemptedChallenges}</td>
+              <td style="font-weight: 600;">${e.completedChallenges}</td>
+              <td style="font-weight: 700;">${e.averageScore}%</td>
+              <td style="font-weight: 700;">${e.bestScore} pts</td>
+              <td style="font-weight: 800; color: var(--accent-emerald); font-size: 1rem;">${e.totalPoints} pts</td>
+              <td><span class="badge-tag ${e.completedChallenges > 0 ? 'easy' : 'hard'}" style="font-size: 0.675rem;">${e.participationStatus}</span></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      function updatePagination(currPage, totalPgs) {
+        currentPage = currPage;
+        totalPages = Math.max(1, totalPgs);
+        pageNumIndicator.textContent = `Page ${currentPage + 1} of ${totalPages}`;
+        prevPageBtn.disabled = (currentPage <= 0);
+        nextPageBtn.disabled = (currentPage >= totalPages - 1);
+      }
+
+      applyFilterBtn.addEventListener('click', () => { currentPage = 0; fetchLeaderboard(); });
+      filterSearch.addEventListener('keyup', (e) => { if (e.key === 'Enter') { currentPage = 0; fetchLeaderboard(); } });
+
+      resetFilterBtn.addEventListener('click', () => {
+        filterSearch.value = '';
+        filterPeriod.value = 'ALL_TIME';
+        filterCategory.value = '';
+        filterDifficulty.value = '';
+        currentPage = 0;
+        fetchLeaderboard();
+      });
+
+      prevPageBtn.addEventListener('click', () => { if (currentPage > 0) { currentPage--; fetchLeaderboard(); } });
+      nextPageBtn.addEventListener('click', () => { if (currentPage < totalPages - 1) { currentPage++; fetchLeaderboard(); } });
+
+      const logoutHandler = (e) => { e.preventDefault(); window.location.href = `${API_BASE_URL}/logout`; };
+      document.getElementById('logout-btn').addEventListener('click', logoutHandler);
+
+      await fetchLeaderboard();
+    });
+  </script>
+</body>
+</html>

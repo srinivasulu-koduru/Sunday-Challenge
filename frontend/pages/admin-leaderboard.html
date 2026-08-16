@@ -3,68 +3,227 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Sunday Challenge — Admin Platform Leaderboard">
-  <title>Leaderboard — Sunday Challenge</title>
+  <meta name="description" content="Sunday Challenge — Admin Platform Leaderboard & Ranking Control">
+  <title>Admin Leaderboard — Sunday Challenge</title>
   <link rel="stylesheet" href="../css/style.css">
   <style>
-    .table-responsive { width: 100%; overflow-x: auto; }
-    .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
-    .data-table th, .data-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); }
-    .data-table th { background: rgba(15, 23, 42, 0.6); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
+    /* Top 3 Podium Section */
+    .podium-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .podium-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .podium-card.rank-1 { border-color: rgba(245, 158, 11, 0.5); background: linear-gradient(180deg, rgba(245, 158, 11, 0.12), var(--surface-card)); }
+    .podium-card.rank-2 { border-color: rgba(148, 163, 184, 0.5); background: linear-gradient(180deg, rgba(148, 163, 184, 0.12), var(--surface-card)); }
+    .podium-card.rank-3 { border-color: rgba(180, 83, 9, 0.5); background: linear-gradient(180deg, rgba(180, 83, 9, 0.12), var(--surface-card)); }
+    .crown-icon { font-size: 1.6rem; margin-bottom: 0.2rem; }
+    .podium-avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin: 0.4rem auto; border: 3px solid var(--border-color); }
+    .rank-1 .podium-avatar { border-color: #f59e0b; box-shadow: 0 0 12px rgba(245, 158, 11, 0.4); }
+    .rank-2 .podium-avatar { border-color: #94a3b8; box-shadow: 0 0 12px rgba(148, 163, 184, 0.4); }
+    .rank-3 .podium-avatar { border-color: #b45309; box-shadow: 0 0 12px rgba(180, 83, 9, 0.4); }
+    .podium-name { font-family: 'Outfit', sans-serif; font-size: 1.05rem; font-weight: 700; color: var(--text-main); }
+    .podium-roll { font-size: 0.775rem; color: var(--accent-cyan); font-weight: 600; }
+    .podium-points { font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 800; color: var(--accent-emerald); margin-top: 0.35rem; }
+
+    /* Filter & Table Styling */
+    .filter-panel {
+      background: var(--surface-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.75rem;
+      align-items: flex-end;
+    }
+    .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem; }
+    .data-table th, .data-table td { padding: 0.75rem 0.9rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+    .data-table th { background: rgba(15, 23, 42, 0.7); color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 0.725rem; letter-spacing: 0.05em; }
     .data-table tr:hover { background: rgba(255, 255, 255, 0.02); }
-    .rank-badge {
+    .rank-cell-badge {
+      display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 0.85rem;
+    }
+    .badge-r1 { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+    .badge-r2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: #fff; }
+    .badge-r3 { background: linear-gradient(135deg, #b45309, #78350f); color: #fff; }
+    .badge-rother { background: rgba(255, 255, 255, 0.08); color: var(--text-muted); }
+    .avatar-initial {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 28px;
-      height: 28px;
       border-radius: 50%;
+      font-family: 'Outfit', sans-serif;
       font-weight: 800;
-      font-size: 0.85rem;
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      margin: 0.4rem auto;
+      text-transform: uppercase;
+      flex-shrink: 0;
     }
-    .rank-1 { background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff; }
-    .rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: #ffffff; }
-    .rank-3 { background: linear-gradient(135deg, #b45309, #78350f); color: #ffffff; }
-    .rank-other { background: rgba(255, 255, 255, 0.08); color: var(--text-muted); }
   </style>
 </head>
 <body>
 
+  <!-- Loading Overlay -->
   <div id="loading-overlay" class="loading-overlay">
     <div class="spinner"></div>
-    <div class="loading-text">Loading Platform Leaderboard...</div>
+    <div class="loading-text">Loading platform leaderboard...</div>
   </div>
 
+  <!-- Header Navigation -->
   <header>
-    <nav class="navbar">
+    <nav class="navbar" aria-label="Main Navigation">
       <a href="../index.html" class="brand">
         <div class="brand-icon" style="background: linear-gradient(135deg, var(--accent-rose), #e11d48);">SC</div>
         <div class="brand-title">Sunday <span>Admin</span></div>
       </a>
+
       <div style="display: flex; align-items: center; gap: 1rem;">
-        <span class="stage-badge" style="background: rgba(244,63,94,0.15); color: #fda4af; border: 1px solid rgba(244,63,94,0.3);">👑 Administrator Portal</span>
+        <span class="stage-badge" style="background: rgba(244,63,94,0.15); color: #fda4af; border: 1px solid rgba(244,63,94,0.3);">
+          👑 Administrator Portal
+        </span>
         <button id="logout-btn" class="btn btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.85rem;">Logout</button>
       </div>
     </nav>
   </header>
 
+  <!-- Main Container -->
   <main class="container">
     <div class="dashboard-layout">
+      <!-- Admin Sidebar -->
       <aside class="sidebar">
         <div class="sidebar-title">Admin Management</div>
         <a href="admin-dashboard.html" class="sidebar-link"><span>📊 Dashboard</span></a>
+        <a href="admin-students.html" class="sidebar-link"><span>🎓 Student Intelligence</span></a>
+        <a href="admin-roster.html" class="sidebar-link"><span>📋 College Roster</span></a>
         <a href="admin-challenges.html" class="sidebar-link"><span>📝 Challenges</span></a>
         <a href="admin-attempts.html" class="sidebar-link"><span>⏱️ Attempts</span></a>
         <a href="admin-leaderboard.html" class="sidebar-link active"><span>🏆 Leaderboard</span></a>
         <a href="admin-reports.html" class="sidebar-link"><span>📈 Reports</span></a>
+        <a href="admin-control.html" class="sidebar-link"><span>🔐 Admin Control</span></a>
         <a href="#" id="sidebar-logout-btn" class="sidebar-link" style="color: var(--accent-rose); margin-top: 1rem;"><span>🚪 Logout</span></a>
       </aside>
 
+      <!-- Main Content -->
       <div class="main-content">
+        <!-- Header Banner -->
+        <section class="card" style="margin-bottom: 1.25rem;">
+          <div class="card-header" style="border: none; padding: 0; margin-bottom: 0.5rem;">
+            <h1 class="card-title" style="font-size: 1.35rem;">🏆 Official Platform Rankings Leaderboard</h1>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Deterministic Backend Ranking</span>
+          </div>
+          <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
+            Administrator view of student rankings, category performance, participation filtering, and search.
+          </p>
+        </section>
+
+        <!-- Top 3 Podium Section -->
+        <section id="podium-section" class="podium-container" style="display: none;">
+          <!-- Rank 2 -->
+          <div id="podium-2" class="podium-card rank-2" style="display: none;">
+            <div class="crown-icon">🥈</div>
+            <span class="badge-tag category" style="font-size: 0.675rem;">RANK #2</span>
+            <div id="podium-2-avatar-container" style="display: flex; justify-content: center; margin: 0.4rem 0;"></div>
+            <div id="podium-2-name" class="podium-name">--</div>
+            <div id="podium-2-roll" class="podium-roll">--</div>
+            <div id="podium-2-pts" class="podium-points">0 pts</div>
+            <div id="podium-2-sub" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">--</div>
+          </div>
+
+          <!-- Rank 1 -->
+          <div id="podium-1" class="podium-card rank-1" style="display: none;">
+            <div class="crown-icon">🥇</div>
+            <span class="badge-tag hard" style="font-size: 0.7rem; background: rgba(245,158,11,0.2); color: #fde68a;">CHAMPION #1</span>
+            <div id="podium-1-avatar-container" style="display: flex; justify-content: center; margin: 0.4rem 0;"></div>
+            <div id="podium-1-name" class="podium-name">--</div>
+            <div id="podium-1-roll" class="podium-roll">--</div>
+            <div id="podium-1-pts" class="podium-points">0 pts</div>
+            <div id="podium-1-sub" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">--</div>
+          </div>
+
+          <!-- Rank 3 -->
+          <div id="podium-3" class="podium-card rank-3" style="display: none;">
+            <div class="crown-icon">🥉</div>
+            <span class="badge-tag category" style="font-size: 0.675rem;">RANK #3</span>
+            <div id="podium-3-avatar-container" style="display: flex; justify-content: center; margin: 0.4rem 0;"></div>
+            <div id="podium-3-name" class="podium-name">--</div>
+            <div id="podium-3-roll" class="podium-roll">--</div>
+            <div id="podium-3-pts" class="podium-points">0 pts</div>
+            <div id="podium-3-sub" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">--</div>
+          </div>
+        </section>
+
+        <!-- Filter Panel -->
+        <section class="filter-panel">
+          <div class="filter-grid">
+            <div class="form-group" style="grid-column: span 2;">
+              <label class="form-label" style="font-size: 0.75rem;">Search Student</label>
+              <input type="text" id="filter-search" class="form-control" placeholder="Search Roll Number (e.g. 244G1A05CP) or Name..." style="padding: 0.45rem 0.75rem; font-size: 0.85rem;" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="font-size: 0.75rem;">Participation Filter</label>
+              <select id="filter-participation" class="form-control" style="padding: 0.45rem 0.75rem; font-size: 0.85rem;">
+                <option value="">All Registered</option>
+                <option value="PARTICIPATED">Participated (&gt;=1 Exam)</option>
+                <option value="NEVER_PARTICIPATED">Never Participated</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="font-size: 0.75rem;">Time Period</label>
+              <select id="filter-period" class="form-control" style="padding: 0.45rem 0.75rem; font-size: 0.85rem;">
+                <option value="ALL_TIME">All Time</option>
+                <option value="THIS_WEEK">This Week</option>
+                <option value="THIS_MONTH">This Month</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="font-size: 0.75rem;">Category</label>
+              <select id="filter-category" class="form-control" style="padding: 0.45rem 0.75rem; font-size: 0.85rem;">
+                <option value="">All Categories</option>
+                <option value="APTITUDE">Aptitude</option>
+                <option value="REASONING">Reasoning</option>
+                <option value="CODING">Coding</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="font-size: 0.75rem;">Difficulty</label>
+              <select id="filter-difficulty" class="form-control" style="padding: 0.45rem 0.75rem; font-size: 0.85rem;">
+                <option value="">All Difficulties</option>
+                <option value="EASY">Easy</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HARD">Hard</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 0.4rem;">
+              <button id="apply-filter-btn" class="btn" style="padding: 0.45rem 0.85rem; font-size: 0.825rem;">Apply</button>
+              <button id="reset-filter-btn" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.825rem;">Reset</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Table Card -->
         <section class="card">
-          <div class="card-header">
-            <h1 class="card-title">🏆 Platform Rankings Leaderboard</h1>
-            <span style="font-size: 0.85rem; color: var(--text-muted);">Deterministic Backend Scoring System</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+            <span id="page-summary-label" style="font-size: 0.8rem; color: var(--text-muted);">Loading rankings...</span>
           </div>
 
           <div class="table-responsive">
@@ -72,17 +231,27 @@
               <thead>
                 <tr>
                   <th>Rank</th>
-                  <th>Roll No / Username</th>
                   <th>Student Name</th>
+                  <th>Roll Number</th>
+                  <th>Attempted</th>
+                  <th>Completed</th>
+                  <th>Avg Accuracy</th>
+                  <th>Best Score</th>
                   <th>Total Points</th>
-                  <th>Completed Challenges</th>
-                  <th>Average Accuracy</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody id="leaderboard-table-body">
-                <tr><td colspan="6" style="text-align: center; padding: 2rem;">Loading leaderboard...</td></tr>
+                <tr><td colspan="9" style="text-align: center; padding: 2rem;">Loading leaderboard...</td></tr>
               </tbody>
             </table>
+          </div>
+
+          <!-- Pagination Bar -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+            <button id="prev-page-btn" class="btn btn-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;" disabled>&larr; Previous</button>
+            <span id="page-num-indicator" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Page 1</span>
+            <button id="next-page-btn" class="btn btn-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;" disabled>Next &rarr;</button>
           </div>
         </section>
       </div>
@@ -90,61 +259,186 @@
   </main>
 
   <footer>
-    <p>Sunday Challenge Platform — Admin Management System (Stage 5 Active)</p>
+    <p>Sunday Challenge Platform — Official Admin Leaderboard Management (Stage 5 Active)</p>
   </footer>
 
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const API_BASE_URL = 'http://localhost:8080';
+
       const loadingOverlay = document.getElementById('loading-overlay');
-      const tableBody = document.getElementById('leaderboard-table-body');
+      const logoutBtn = document.getElementById('logout-btn');
+      const sidebarLogoutBtn = document.getElementById('sidebar-logout-btn');
+      const podiumSection = document.getElementById('podium-section');
+
+      const filterSearch = document.getElementById('filter-search');
+      const filterParticipation = document.getElementById('filter-participation');
+      const filterPeriod = document.getElementById('filter-period');
+      const filterCategory = document.getElementById('filter-category');
+      const filterDifficulty = document.getElementById('filter-difficulty');
+      const applyFilterBtn = document.getElementById('apply-filter-btn');
+      const resetFilterBtn = document.getElementById('reset-filter-btn');
+
+      const pageSummaryLabel = document.getElementById('page-summary-label');
+      const leaderboardTableBody = document.getElementById('leaderboard-table-body');
+      const prevPageBtn = document.getElementById('prev-page-btn');
+      const nextPageBtn = document.getElementById('next-page-btn');
+      const pageNumIndicator = document.getElementById('page-num-indicator');
+
+      let currentPage = 0;
+      let totalPages = 1;
+      const pageSize = 20;
+
+      async function verifyAdminAuth() {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/user/me`, { credentials: 'include' });
+          if (!res.ok) { window.location.href = 'admin-login.html'; return false; }
+          const user = await res.json();
+          if (user.role !== 'ADMIN') { window.location.href = 'admin-login.html'; return false; }
+          return true;
+        } catch (e) {
+          console.error(e);
+          return false;
+        }
+      }
 
       async function fetchLeaderboard() {
         try {
-          const res = await fetch(`${API_BASE_URL}/api/admin/leaderboard`, { credentials: 'include' });
-          if (!res.ok) {
-            if (res.status === 401) { window.location.href = 'login.html'; return; }
-            throw new Error(`HTTP ${res.status}`);
-          }
-          const leaderboard = await res.json();
-          renderLeaderboard(leaderboard);
+          let url = `${API_BASE_URL}/api/admin/leaderboard?page=${currentPage}&size=${pageSize}`;
+          if (filterSearch.value.trim()) url += `&search=${encodeURIComponent(filterSearch.value.trim())}`;
+          if (filterParticipation.value) url += `&participation=${filterParticipation.value}`;
+          if (filterPeriod.value) url += `&period=${filterPeriod.value}`;
+          if (filterCategory.value) url += `&category=${filterCategory.value}`;
+          if (filterDifficulty.value) url += `&difficulty=${filterDifficulty.value}`;
+
+          const res = await fetch(url, { credentials: 'include' });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+          const data = await res.json();
+          renderPodium(data.topThree);
+          renderTable(data.entries, data.totalStudents, data.participatingStudents);
+          updatePagination(data.currentPage, data.totalPages);
         } catch (e) {
           console.error(e);
-          tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--accent-rose); padding: 2rem;">Failed to load leaderboard rankings.</td></tr>`;
+          leaderboardTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--accent-rose); padding: 2rem;">Failed to load leaderboard rankings.</td></tr>`;
         } finally {
           if (loadingOverlay) loadingOverlay.style.display = 'none';
         }
       }
 
-      function renderLeaderboard(entries) {
-        if (!entries || entries.length === 0) {
-          tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem;">No ranked students yet.</td></tr>`;
+      function getAvatarHtml(name, profileImage, size = 60) {
+        const initial = (name && name.trim().length > 0) ? name.trim().charAt(0).toUpperCase() : 'S';
+        const colors = [
+          'linear-gradient(135deg, #6366f1, #4f46e5)',
+          'linear-gradient(135deg, #06b6d4, #0891b2)',
+          'linear-gradient(135deg, #10b981, #059669)',
+          'linear-gradient(135deg, #f59e0b, #d97706)',
+          'linear-gradient(135deg, #ec4899, #db2777)',
+          'linear-gradient(135deg, #8b5cf6, #7c3aed)'
+        ];
+        const charCode = initial.charCodeAt(0);
+        const color = colors[charCode % colors.length];
+
+        if (profileImage && profileImage.trim().length > 0 && !profileImage.includes('placeholder')) {
+          return `<img src="${profileImage}" alt="${name || 'Student'}" style="width:${size}px; height:${size}px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.2);" onerror="this.onerror=null; this.outerHTML='<div class=\\'avatar-initial\\' style=\\'width:${size}px; height:${size}px; background:${color}; font-size:${Math.round(size*0.45)}px;\\'>${initial}</div>';" />`;
+        } else {
+          return `<div class="avatar-initial" style="width:${size}px; height:${size}px; background:${color}; font-size:${Math.round(size*0.45)}px;">${initial}</div>`;
+        }
+      }
+
+      function renderPodium(top3) {
+        if (!top3 || top3.length === 0) {
+          podiumSection.style.display = 'none';
           return;
         }
-        tableBody.innerHTML = entries.map(e => {
-          let rankClass = 'rank-other';
-          if (e.rank === 1) rankClass = 'rank-1';
-          else if (e.rank === 2) rankClass = 'rank-2';
-          else if (e.rank === 3) rankClass = 'rank-3';
+
+        podiumSection.style.display = 'grid';
+        [1, 2, 3].forEach(r => {
+          const card = document.getElementById(`podium-${r}`);
+          const entry = top3.find(e => e.rank === r);
+          if (entry) {
+            const avatarContainer = document.getElementById(`podium-${r}-avatar-container`);
+            if (avatarContainer) {
+              avatarContainer.innerHTML = getAvatarHtml(entry.name, entry.profileImage, r === 1 ? 64 : 54);
+            }
+            document.getElementById(`podium-${r}-name`).textContent = entry.name || 'Student';
+            document.getElementById(`podium-${r}-roll`).textContent = entry.username || 'N/A';
+            document.getElementById(`podium-${r}-pts`).textContent = `${entry.totalPoints} pts`;
+            document.getElementById(`podium-${r}-sub`).textContent = `${entry.completedChallenges} Completed | ${entry.averageScore}% Accuracy`;
+            card.style.display = 'block';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      }
+
+      function renderTable(entries, totalStus, partStus) {
+        pageSummaryLabel.textContent = `Showing ${entries ? entries.length : 0} Entries (Total Enrolled: ${totalStus || 0} | Participated: ${partStus || 0})`;
+
+        if (!entries || entries.length === 0) {
+          leaderboardTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 2rem; color: var(--text-muted);">No student rankings match current filter criteria.</td></tr>`;
+          return;
+        }
+
+        leaderboardTableBody.innerHTML = entries.map(e => {
+          let badgeClass = 'badge-rother';
+          if (e.rank === 1) badgeClass = 'badge-r1';
+          else if (e.rank === 2) badgeClass = 'badge-r2';
+          else if (e.rank === 3) badgeClass = 'badge-r3';
 
           return `
             <tr>
-              <td><span class="rank-badge ${rankClass}">${e.rank}</span></td>
+              <td><span class="rank-cell-badge ${badgeClass}">${e.rank}</span></td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                  ${getAvatarHtml(e.name, e.profileImage, 30)}
+                  <span style="font-weight: 700; color: var(--text-main);">${e.name || 'Student'}</span>
+                </div>
+              </td>
               <td style="font-weight: 700; color: var(--accent-cyan);">${e.username}</td>
-              <td style="font-weight: 600;">${e.name || 'Anonymous Student'}</td>
-              <td><span style="font-weight: 800; color: var(--accent-emerald); font-size: 1rem;">${e.totalPoints} pts</span></td>
-              <td>${e.completedChallenges}</td>
-              <td>${e.averageScore}%</td>
+              <td style="font-weight: 600;">${e.attemptedChallenges}</td>
+              <td style="font-weight: 600;">${e.completedChallenges}</td>
+              <td style="font-weight: 700;">${e.averageScore}%</td>
+              <td style="font-weight: 700;">${e.bestScore} pts</td>
+              <td style="font-weight: 800; color: var(--accent-emerald); font-size: 1rem;">${e.totalPoints} pts</td>
+              <td><span class="badge-tag ${e.completedChallenges > 0 ? 'easy' : 'hard'}" style="font-size: 0.675rem;">${e.participationStatus}</span></td>
             </tr>
           `;
         }).join('');
       }
 
-      const logoutHandler = (e) => { e.preventDefault(); window.location.href = `${API_BASE_URL}/logout`; };
-      document.getElementById('logout-btn').addEventListener('click', logoutHandler);
-      document.getElementById('sidebar-logout-btn').addEventListener('click', logoutHandler);
+      function updatePagination(currPage, totalPgs) {
+        currentPage = currPage;
+        totalPages = Math.max(1, totalPgs);
+        pageNumIndicator.textContent = `Page ${currentPage + 1} of ${totalPages}`;
+        prevPageBtn.disabled = (currentPage <= 0);
+        nextPageBtn.disabled = (currentPage >= totalPages - 1);
+      }
 
-      await fetchLeaderboard();
+      const logoutHandler = (e) => { e.preventDefault(); window.location.href = `${API_BASE_URL}/logout`; };
+      if (logoutBtn) logoutBtn.addEventListener('click', logoutHandler);
+      if (sidebarLogoutBtn) sidebarLogoutBtn.addEventListener('click', logoutHandler);
+
+      applyFilterBtn.addEventListener('click', () => { currentPage = 0; fetchLeaderboard(); });
+      filterSearch.addEventListener('keyup', (e) => { if (e.key === 'Enter') { currentPage = 0; fetchLeaderboard(); } });
+
+      resetFilterBtn.addEventListener('click', () => {
+        filterSearch.value = '';
+        filterParticipation.value = '';
+        filterPeriod.value = 'ALL_TIME';
+        filterCategory.value = '';
+        filterDifficulty.value = '';
+        currentPage = 0;
+        fetchLeaderboard();
+      });
+
+      prevPageBtn.addEventListener('click', () => { if (currentPage > 0) { currentPage--; fetchLeaderboard(); } });
+      nextPageBtn.addEventListener('click', () => { if (currentPage < totalPages - 1) { currentPage++; fetchLeaderboard(); } });
+
+      const ok = await verifyAdminAuth();
+      if (ok) {
+        fetchLeaderboard();
+      }
     });
   </script>
 </body>

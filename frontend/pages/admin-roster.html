@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sunday Challenge — College Student Roster Management">
+  <title>College Student Roster — Sunday Challenge</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .import-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+    .data-table th, .data-table td {
+      padding: 0.65rem 0.85rem;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+    .data-table th {
+      background: rgba(15, 23, 42, 0.7);
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+    }
+    .data-table tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading college roster records...</div>
+  </div>
+
+  <!-- Header Navigation -->
+  <header>
+    <nav class="navbar" aria-label="Main Navigation">
+      <a href="../index.html" class="brand">
+        <div class="brand-icon" style="background: linear-gradient(135deg, var(--accent-rose), #e11d48);">SC</div>
+        <div class="brand-title">Sunday <span>Admin</span></div>
+      </a>
+
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span class="stage-badge" style="background: rgba(244,63,94,0.15); color: #fda4af; border: 1px solid rgba(244,63,94,0.3);">
+          👑 Administrator Portal
+        </span>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.85rem;">Logout</button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container">
+    <div class="dashboard-layout">
+      <!-- Admin Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-title">Admin Management</div>
+        <a href="admin-dashboard.html" class="sidebar-link"><span>📊 Dashboard</span></a>
+        <a href="admin-students.html" class="sidebar-link"><span>🎓 Student Intelligence</span></a>
+        <a href="admin-roster.html" class="sidebar-link active"><span>📋 College Roster</span></a>
+        <a href="admin-challenges.html" class="sidebar-link"><span>📝 Challenges</span></a>
+        <a href="admin-attempts.html" class="sidebar-link"><span>⏱️ Attempts</span></a>
+        <a href="admin-leaderboard.html" class="sidebar-link"><span>🏆 Leaderboard</span></a>
+        <a href="admin-reports.html" class="sidebar-link"><span>📈 Reports</span></a>
+        <a href="admin-control.html" class="sidebar-link"><span>🔐 Admin Control</span></a>
+        <a href="#" id="sidebar-logout-btn" class="sidebar-link" style="color: var(--accent-rose); margin-top: 1rem;"><span>🚪 Logout</span></a>
+      </aside>
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Import Roster Card -->
+        <section class="import-card">
+          <div class="card-header" style="border: none; padding: 0; margin-bottom: 0.75rem;">
+            <h1 class="card-title" style="font-size: 1.25rem;">📋 Import College Student Roster (CSV)</h1>
+            <span style="font-size: 0.775rem; color: var(--text-muted);">Minimum column: <code>rollNumber</code> (Optional: <code>name</code>, <code>email</code>)</span>
+          </div>
+
+          <!-- Result Feedback Banner -->
+          <div id="import-banner" class="alert-banner" style="display: none; margin-bottom: 1rem;">
+            <span>ℹ️</span>
+            <div id="import-banner-text">Import status message.</div>
+          </div>
+
+          <form id="roster-import-form">
+            <div class="form-group full-width" style="margin-bottom: 0.75rem;">
+              <label class="form-label" style="font-weight: 700; font-size: 0.8rem;">Select CSV File</label>
+              <input type="file" id="roster-file-input" accept=".csv,text/csv" class="form-control" style="font-size: 0.85rem;" />
+            </div>
+
+            <div class="form-group full-width" style="margin-bottom: 1rem;">
+              <label class="form-label" style="font-weight: 700; font-size: 0.8rem;">Or Paste CSV Text</label>
+              <textarea id="csv-input" class="form-control" rows="4" placeholder="rollNumber,name,email&#10;244g1a05cs,Srinivasulu K,srinivasulu3621@gmail.com&#10;244g1a06cs,Ravi Kumar,ravi@gmail.com&#10;244g1a07cs,Anil Kumar,anil@gmail.com" required style="font-family: monospace; font-size: 0.85rem;"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center;">
+              <button type="button" id="load-sample-btn" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.8rem;">Fill Sample CSV</button>
+              <button type="submit" id="import-submit-btn" class="btn" style="padding: 0.45rem 1.1rem; font-size: 0.85rem;">📥 Import Roster CSV</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Roster Table Card -->
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">👥 College Roster vs. Portal Registration</h2>
+              <div id="roster-count-sub" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Loading roster count...</div>
+            </div>
+            <a href="admin-students.html" class="btn btn-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">🎓 Student Intelligence Hub →</a>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Roll Number</th>
+                  <th>Student Name</th>
+                  <th>Email Address</th>
+                  <th>Portal Registration</th>
+                  <th>Import Date</th>
+                </tr>
+              </thead>
+              <tbody id="roster-table-body">
+                <tr><td colspan="5" style="text-align: center; padding: 2rem;">Loading roster table...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>Sunday Challenge Platform — Admin Management System (Stage 5 Refined)</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const API_BASE_URL = 'http://localhost:8080';
+
+      const loadingOverlay = document.getElementById('loading-overlay');
+      const importBanner = document.getElementById('import-banner');
+      const importBannerText = document.getElementById('import-banner-text');
+
+      const rosterForm = document.getElementById('roster-import-form');
+      const rosterFileInput = document.getElementById('roster-file-input');
+      const csvInput = document.getElementById('csv-input');
+      const loadSampleBtn = document.getElementById('load-sample-btn');
+      const importSubmitBtn = document.getElementById('import-submit-btn');
+
+      const rosterCountSub = document.getElementById('roster-count-sub');
+      const rosterTableBody = document.getElementById('roster-table-body');
+
+      async function fetchRoster() {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/admin/student-roster`, { credentials: 'include' });
+          if (!res.ok) {
+            if (res.status === 401) { window.location.href = 'login.html'; return; }
+            throw new Error(`HTTP ${res.status}`);
+          }
+
+          const roster = await res.json();
+          renderRosterTable(roster);
+        } catch (e) {
+          console.error(e);
+          rosterTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--accent-rose); padding: 1.5rem;">Failed to load roster records.</td></tr>`;
+        } finally {
+          if (loadingOverlay) loadingOverlay.style.display = 'none';
+        }
+      }
+
+      function renderRosterTable(roster) {
+        const regCount = roster.filter(r => r.isRegisteredOnPortal).length;
+        const unregCount = roster.length - regCount;
+        rosterCountSub.textContent = `Total Roster: ${roster.length} | Registered: ${regCount} | Not Registered: ${unregCount}`;
+
+        if (!roster || roster.length === 0) {
+          rosterTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">No student roster records found. Import a CSV roster above.</td></tr>`;
+          return;
+        }
+
+        rosterTableBody.innerHTML = roster.map(r => `
+          <tr>
+            <td style="font-weight: 700; color: var(--accent-cyan);">${r.rollNumber}</td>
+            <td style="font-weight: 600;">${r.name}</td>
+            <td>${r.email}</td>
+            <td>
+              <span class="badge-tag ${r.isRegisteredOnPortal ? 'easy' : 'hard'}" style="font-size: 0.675rem;">
+                ${r.isRegisteredOnPortal ? 'REGISTERED' : 'NOT REGISTERED'}
+              </span>
+            </td>
+            <td style="color: var(--text-muted); font-size: 0.775rem;">${r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'N/A'}</td>
+          </tr>
+        `).join('');
+      }
+
+      rosterFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          csvInput.value = evt.target.result;
+        };
+        reader.readAsText(file);
+      });
+
+      loadSampleBtn.addEventListener('click', () => {
+        csvInput.value = `rollNumber,name,email\n244g1a05cs,Srinivasulu K,srinivasulu3621@gmail.com\n244g1a06cs,Ravi Kumar,ravi@gmail.com\n244g1a07cs,Anil Kumar,anil@gmail.com`;
+      });
+
+      rosterForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        importBanner.style.display = 'none';
+
+        const csvContent = csvInput.value.trim();
+        if (!csvContent) {
+          alert('Please select a CSV file or enter CSV content.');
+          return;
+        }
+
+        importSubmitBtn.disabled = true;
+        importSubmitBtn.textContent = '⏳ Importing...';
+
+        const importUrl = `${API_BASE_URL}/api/admin/students/roster/import`;
+
+        try {
+          const res = await fetch(importUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ csvContent })
+          });
+
+          if (!res.ok) {
+            let errorMsg = `HTTP ${res.status}`;
+            if (res.status === 400) {
+              const err = await res.json().catch(() => ({}));
+              errorMsg = err.message || 'Invalid CSV format or missing required roll numbers.';
+            } else if (res.status === 401) {
+              errorMsg = 'Please login again.';
+              setTimeout(() => window.location.href = 'login.html', 1500);
+            } else if (res.status === 403) {
+              errorMsg = 'Administrator access required.';
+            } else if (res.status === 404) {
+              console.error('[HTTP 404] CSV import API URL not found:', importUrl);
+              errorMsg = `Endpoint not found (HTTP 404): ${importUrl}`;
+            } else if (res.status >= 500) {
+              errorMsg = 'Server error processing CSV import. Please try again.';
+            }
+            throw new Error(errorMsg);
+          }
+
+          const resp = await res.json();
+          importBannerText.innerHTML = `✅ <strong>Import Complete!</strong> Total: <strong>${resp.totalRows || resp.totalProcessed}</strong> | Imported: <strong>${resp.importedRows || resp.importedCount}</strong> | Duplicates: <strong>${resp.duplicateRows || resp.duplicateCount}</strong> | Invalid: <strong>${resp.invalidRows || resp.errorCount}</strong>`;
+          importBanner.className = 'alert-banner success';
+          importBanner.style.display = 'flex';
+
+          csvInput.value = '';
+          rosterFileInput.value = '';
+          await fetchRoster();
+        } catch (err) {
+          console.error('[CSV IMPORT ERROR]', err);
+          importBannerText.textContent = `Import Failed: ${err.message}`;
+          importBanner.className = 'alert-banner danger';
+          importBanner.style.display = 'flex';
+        } finally {
+          importSubmitBtn.disabled = false;
+          importSubmitBtn.textContent = '📥 Import Roster CSV';
+        }
+      });
+
+      const logoutHandler = (e) => { e.preventDefault(); window.location.href = `${API_BASE_URL}/logout`; };
+      document.getElementById('logout-btn').addEventListener('click', logoutHandler);
+      document.getElementById('sidebar-logout-btn').addEventListener('click', logoutHandler);
+
+      await fetchRoster();
+    });
+  </script>
+</body>
+</html>

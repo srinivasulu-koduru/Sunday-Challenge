@@ -26,11 +26,11 @@ public class Attempt {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "challenge_id", nullable = false)
     private Challenge challenge;
 
@@ -70,6 +70,13 @@ public class Attempt {
         this.challenge = challenge;
         this.startedAt = startedAt;
         this.status = status;
+    }
+
+    public Attempt(User user, Challenge challenge) {
+        this.user = user;
+        this.challenge = challenge;
+        this.startedAt = LocalDateTime.now();
+        this.status = AttemptStatus.IN_PROGRESS;
     }
 
     public Long getId() {

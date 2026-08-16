@@ -59,98 +59,109 @@
       border-radius: 12px;
       margin-bottom: 0.35rem;
     }
-    .profile-meta-grid {
+
+    /* Student Intelligence Stat Cards */
+    .tnp-stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 0.75rem;
-      margin-top: 0.75rem;
-      background: rgba(15, 23, 42, 0.6);
-      padding: 0.85rem 1.1rem;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-color);
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
     }
-    .meta-item {
+    .tnp-stat-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.1rem;
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
+      transition: transform var(--transition-fast), border-color var(--transition-fast);
     }
-    .meta-label {
+    .tnp-stat-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(244, 63, 94, 0.3);
+    }
+    .tnp-stat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    .tnp-stat-title {
       font-size: 0.75rem;
       color: var(--text-muted);
       text-transform: uppercase;
+      font-weight: 700;
       letter-spacing: 0.05em;
     }
-    .meta-value {
-      font-size: 0.9rem;
-      font-weight: 600;
+    .tnp-stat-icon {
+      font-size: 1.2rem;
+    }
+    .tnp-stat-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
       color: var(--text-main);
+      line-height: 1.1;
     }
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      padding: 0.3rem 0.75rem;
-      border-radius: 20px;
-    }
-    .status-pill.admin-active {
-      background: rgba(244, 63, 94, 0.15);
-      color: #fda4af;
-      border: 1px solid rgba(244, 63, 94, 0.3);
-    }
-    .status-dot-rose {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background-color: var(--accent-rose);
-      box-shadow: 0 0 8px var(--accent-rose);
+    .tnp-stat-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
     }
 
-    /* Challenge Management Grid & Cards */
-    .filter-bar {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      margin-bottom: 1.25rem;
+    /* Quick Shortcuts Grid */
+    .shortcut-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
     }
-    .filter-chip {
-      padding: 0.4rem 0.9rem;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      background: rgba(255, 255, 255, 0.05);
+    .shortcut-card {
+      background: var(--surface-card);
       border: 1px solid var(--border-color);
-      color: var(--text-muted);
-      cursor: pointer;
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      text-decoration: none;
+      color: var(--text-main);
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
       transition: all var(--transition-fast);
     }
-    .filter-chip:hover, .filter-chip.active {
-      background: rgba(244, 63, 94, 0.15);
-      color: #fda4af;
-      border-color: rgba(244, 63, 94, 0.4);
+    .shortcut-card:hover {
+      border-color: var(--accent-rose);
+      background: rgba(244, 63, 94, 0.05);
+      transform: translateY(-2px);
+    }
+    .shortcut-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
     }
 
-    .challenges-table-container {
-      width: 100%;
-      overflow-x: auto;
-    }
+    /* Challenge Table Styling */
     .data-table {
       width: 100%;
       border-collapse: collapse;
       text-align: left;
-      font-size: 0.9rem;
+      font-size: 0.875rem;
     }
     .data-table th, .data-table td {
-      padding: 0.9rem 1rem;
+      padding: 0.85rem 1rem;
       border-bottom: 1px solid var(--border-color);
     }
     .data-table th {
       background: rgba(15, 23, 42, 0.7);
       color: var(--text-muted);
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
-      font-size: 0.75rem;
+      font-size: 0.725rem;
       letter-spacing: 0.05em;
     }
     .data-table tr:hover {
@@ -169,21 +180,6 @@
     .status-badge.completed { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
     .status-badge.inactive { background: rgba(244, 63, 94, 0.15); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.3); }
     .status-badge.draft { background: rgba(245, 158, 11, 0.15); color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.3); }
-
-    .action-btns-group {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      flex-wrap: wrap;
-    }
-    .btn-xs {
-      padding: 0.3rem 0.65rem;
-      font-size: 0.775rem;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: 600;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
@@ -206,418 +202,339 @@
         <span class="stage-badge" style="background: rgba(244,63,94,0.15); color: #fda4af; border: 1px solid rgba(244,63,94,0.3);">
           👑 Administrator Portal
         </span>
-        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
-          Logout
-        </button>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.85rem;">Logout</button>
       </div>
     </nav>
   </header>
 
   <!-- Main Container -->
   <main class="container">
-
-    <!-- Global Error Banner -->
     <div id="error-banner" class="alert-banner danger" style="display: none;">
       <span>⚠️</span>
-      <div id="error-banner-text">Session verification failed. Please log in again.</div>
+      <div id="error-banner-text">Access Denied: Administrator role required.</div>
     </div>
 
-    <!-- Responsive Layout: Sidebar + Content -->
     <div class="dashboard-layout">
-
-      <!-- Admin Sidebar Navigation -->
+      <!-- Admin Sidebar -->
       <aside class="sidebar">
         <div class="sidebar-title">Admin Management</div>
-        <a href="admin-dashboard.html" class="sidebar-link active">
-          <span>📊 Dashboard</span>
-        </a>
-        <a href="admin-challenges.html" class="sidebar-link">
-          <span>📝 Challenges</span>
-        </a>
-        <a href="admin-attempts.html" class="sidebar-link">
-          <span>⏱️ Attempts</span>
-        </a>
-        <a href="admin-leaderboard.html" class="sidebar-link">
-          <span>🏆 Leaderboard</span>
-        </a>
-        <a href="admin-reports.html" class="sidebar-link">
-          <span>📈 Reports</span>
-        </a>
-        <a href="#" id="sidebar-logout-btn" class="sidebar-link" style="color: var(--accent-rose); margin-top: 1rem;">
-          <span>🚪 Logout</span>
-        </a>
+        <a href="admin-dashboard.html" class="sidebar-link active"><span>📊 Dashboard</span></a>
+        <a href="admin-students.html" class="sidebar-link"><span>🎓 Student Intelligence</span></a>
+        <a href="admin-roster.html" class="sidebar-link"><span>📋 College Roster</span></a>
+        <a href="admin-challenges.html" class="sidebar-link"><span>📝 Challenges</span></a>
+        <a href="admin-attempts.html" class="sidebar-link"><span>⏱️ Attempts</span></a>
+        <a href="admin-leaderboard.html" class="sidebar-link"><span>🏆 Leaderboard</span></a>
+        <a href="admin-reports.html" class="sidebar-link"><span>📈 Reports</span></a>
+        <a href="admin-control.html" class="sidebar-link"><span>🔐 Admin Control</span></a>
+        <a href="#" id="sidebar-logout-btn" class="sidebar-link" style="color: var(--accent-rose); margin-top: 1rem;"><span>🚪 Logout</span></a>
       </aside>
 
-      <!-- Main Content Area -->
+      <!-- Main Content -->
       <div class="main-content">
-
-        <!-- Welcome Banner -->
-        <section class="card" style="background: linear-gradient(135deg, rgba(244, 63, 94, 0.12) 0%, rgba(99, 102, 241, 0.08) 100%);">
-          <h1 id="welcome-title" class="hero-title" style="font-size: 2rem; text-align: left; margin-bottom: 0.35rem;">
-            Admin Dashboard 👋
-          </h1>
-          <p class="hero-desc" style="text-align: left; margin: 0; font-size: 0.95rem;">
-            Manage challenge schedules, configure exam questions, monitor live student attempts, and view platform reports.
-          </p>
-        </section>
-
-        <!-- Authenticated Admin Profile Card -->
-        <section class="card" id="profile-section">
-          <div class="card-header">
-            <h2 class="card-title">👑 Admin Profile</h2>
-            <span class="status-pill admin-active">
-              <span class="status-dot-rose"></span>
-              ADMINISTRATOR
-            </span>
-          </div>
-
+        <!-- Admin Profile Summary Card -->
+        <section class="card profile-card" style="margin-bottom: 1.5rem;">
           <div class="profile-card-content">
             <div class="avatar-wrapper">
-              <img id="user-avatar" src="https://ui-avatars.com/api/?name=Admin&background=f43f5e&color=fff" alt="Admin Profile" class="user-avatar-img" />
-              <span id="role-pill" class="role-pill-overlay">ADMIN</span>
+              <img id="admin-avatar" src="" alt="Admin Profile" class="user-avatar-img" />
+              <span class="role-pill-overlay">ADMIN</span>
             </div>
-
             <div class="profile-details">
-              <div class="admin-tag">Platform Super Administrator</div>
-              <div id="user-name" class="profile-name">Loading...</div>
-              <div id="user-email" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
-                loading@example.com
-              </div>
-
-              <div class="profile-meta-grid">
-                <div class="meta-item">
-                  <span class="meta-label">Username / Roll No</span>
-                  <span id="user-username" class="meta-value" style="color: var(--accent-rose); font-weight: 700;">Loading...</span>
-                </div>
-                <div class="meta-item">
-                  <span class="meta-label">Admin ID</span>
-                  <span id="user-id" class="meta-value">#ADM----</span>
-                </div>
-                <div class="meta-item">
-                  <span class="meta-label">Account Role</span>
-                  <span id="user-role-display" class="meta-value" style="color: var(--accent-rose);">ADMIN</span>
-                </div>
-                <div class="meta-item">
-                  <span class="meta-label">Created At</span>
-                  <span id="user-created-at" class="meta-value">Loading...</span>
-                </div>
-              </div>
+              <span class="admin-tag">👑 College T&amp;P Administrator</span>
+              <h1 id="admin-name" class="profile-name">Loading Profile...</h1>
+              <p id="admin-email" style="font-size: 0.875rem; color: var(--accent-cyan); margin: 0.2rem 0;"></p>
             </div>
+          </div>
+        </section>
+
+        <!-- T&P Student Intelligence Overview -->
+        <section style="margin-bottom: 1.5rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem;">
+            <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin: 0;">
+              📊 T&amp;P Student Intelligence Overview
+            </h2>
+            <a href="admin-students.html" style="font-size: 0.85rem; color: var(--accent-rose); text-decoration: none; font-weight: 600;">View Full Student Intelligence →</a>
+          </div>
+
+          <div class="tnp-stats-grid">
+            <div class="tnp-stat-card">
+              <div class="tnp-stat-header">
+                <span class="tnp-stat-title">College Roster</span>
+                <span class="tnp-stat-icon">📋</span>
+              </div>
+              <div class="tnp-stat-value" id="stat-roster">0</div>
+              <div class="tnp-stat-sub">Official Enrolled Students</div>
+            </div>
+
+            <div class="tnp-stat-card">
+              <div class="tnp-stat-header">
+                <span class="tnp-stat-title">Registered Users</span>
+                <span class="tnp-stat-icon">✅</span>
+              </div>
+              <div class="tnp-stat-value" id="stat-registered" style="color: var(--accent-emerald);">0</div>
+              <div class="tnp-stat-sub">Portal Registered Accounts</div>
+            </div>
+
+            <div class="tnp-stat-card">
+              <div class="tnp-stat-header">
+                <span class="tnp-stat-title">Not Registered</span>
+                <span class="tnp-stat-icon">⚠️</span>
+              </div>
+              <div class="tnp-stat-value" id="stat-not-registered" style="color: var(--accent-rose);">0</div>
+              <div class="tnp-stat-sub"><a href="admin-students.html?tab=not-registered" style="color: inherit;">Action Needed</a></div>
+            </div>
+
+            <div class="tnp-stat-card">
+              <div class="tnp-stat-header">
+                <span class="tnp-stat-title">Participated</span>
+                <span class="tnp-stat-icon">🔥</span>
+              </div>
+              <div class="tnp-stat-value" id="stat-participated" style="color: var(--accent-cyan);">0</div>
+              <div class="tnp-stat-sub">At Least 1 Exam Attempt</div>
+            </div>
+
+            <div class="tnp-stat-card">
+              <div class="tnp-stat-header">
+                <span class="tnp-stat-title">Never Participated</span>
+                <span class="tnp-stat-icon">💤</span>
+              </div>
+              <div class="tnp-stat-value" id="stat-never-participated" style="color: #fde68a;">0</div>
+              <div class="tnp-stat-sub"><a href="admin-students.html?participation=NEVER_PARTICIPATED" style="color: inherit;">Zero Exam Attempts</a></div>
+            </div>
+
+            <div class="tnp-stat-card">
+              <div class="tnp-stat-header">
+                <span class="tnp-stat-title">Avg Score / Completion</span>
+                <span class="tnp-stat-icon">📈</span>
+              </div>
+              <div class="tnp-stat-value" id="stat-score-completion" style="font-size: 1.25rem;">0% / 0%</div>
+              <div class="tnp-stat-sub" id="stat-total-attempts">0 Attempts Logged</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Quick Module Shortcuts -->
+        <section style="margin-bottom: 1.5rem;">
+          <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.85rem;">
+            ⚡ T&amp;P Quick Management Modules
+          </h2>
+
+          <div class="shortcut-grid">
+            <a href="admin-students.html" class="shortcut-card">
+              <div class="shortcut-icon" style="background: rgba(244, 63, 94, 0.15); color: var(--accent-rose);">🎓</div>
+              <div>
+                <strong style="display: block; font-size: 1rem; margin-bottom: 0.2rem;">Student Intelligence Hub</strong>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">View performance, search students, filter non-participants &amp; export CSV.</span>
+              </div>
+            </a>
+
+            <a href="admin-roster.html" class="shortcut-card">
+              <div class="shortcut-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">📋</div>
+              <div>
+                <strong style="display: block; font-size: 1rem; margin-bottom: 0.2rem;">College Student Roster</strong>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Import CSV roster &amp; compare registered vs. unregistered students.</span>
+              </div>
+            </a>
+
+            <a href="admin-control.html" class="shortcut-card">
+              <div class="shortcut-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald);">🔐</div>
+              <div>
+                <strong style="display: block; font-size: 1rem; margin-bottom: 0.2rem;">Admin Access Control</strong>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Manage authorized admin email accounts with Google OAuth security.</span>
+              </div>
+            </a>
+
+            <a href="admin-create-challenge.html" class="shortcut-card">
+              <div class="shortcut-icon" style="background: rgba(245, 158, 11, 0.15); color: #fde68a;">📝</div>
+              <div>
+                <strong style="display: block; font-size: 1rem; margin-bottom: 0.2rem;">Create Challenge</strong>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Configure new assessment tests, question banks, schedule &amp; timer.</span>
+              </div>
+            </a>
           </div>
         </section>
 
         <!-- Challenge Management Section -->
         <section class="card">
-          <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
+          <div class="card-header">
             <div>
               <h2 class="card-title">📝 Challenge Management</h2>
-              <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
-                Create, schedule, activate, and manage question banks for all assessments.
-              </div>
+              <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">Manage assessments, activation status &amp; questions</div>
             </div>
-
-            <a href="admin-create-challenge.html" class="btn" style="padding: 0.6rem 1.25rem; font-size: 0.9rem;">
-              + Create Challenge
-            </a>
+            <a href="admin-create-challenge.html" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem;">+ Create Challenge</a>
           </div>
 
-          <!-- Status Filter Bar -->
-          <div class="filter-bar">
-            <span class="filter-chip active" data-filter="ALL">All Statuses</span>
-            <span class="filter-chip" data-filter="ACTIVE">Active</span>
-            <span class="filter-chip" data-filter="UPCOMING">Upcoming</span>
-            <span class="filter-chip" data-filter="COMPLETED">Completed</span>
-            <span class="filter-chip" data-filter="INACTIVE">Inactive / Draft</span>
-          </div>
-
-          <!-- Challenges Table -->
-          <div class="challenges-table-container">
+          <div id="challenges-container" class="challenges-table-container">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Challenge Details</th>
-                  <th>Category &amp; Difficulty</th>
-                  <th>Schedule Window</th>
+                  <th>Title</th>
+                  <th>Category</th>
+                  <th>Difficulty</th>
                   <th>Duration</th>
-                  <th>Questions &amp; Points</th>
+                  <th>Questions</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="challenges-table-body">
-                <tr>
-                  <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
-                    Loading challenge repository...
-                  </td>
-                </tr>
+                <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading challenge list...</td></tr>
               </tbody>
             </table>
           </div>
         </section>
-
       </div>
     </div>
-
   </main>
 
-  <!-- Footer -->
   <footer>
     <p>Sunday Challenge Platform — Admin Management System (Stage 5 Refined)</p>
   </footer>
 
-  <!-- REST API Integration Script -->
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const API_BASE_URL = 'http://localhost:8080';
-      const LOGIN_PAGE_URL = 'login.html';
 
       const loadingOverlay = document.getElementById('loading-overlay');
       const errorBanner = document.getElementById('error-banner');
       const errorBannerText = document.getElementById('error-banner-text');
 
-      const welcomeTitle = document.getElementById('welcome-title');
-      const userName = document.getElementById('user-name');
-      const userUsername = document.getElementById('user-username');
-      const userEmail = document.getElementById('user-email');
-      const userId = document.getElementById('user-id');
-      const userRoleDisplay = document.getElementById('user-role-display');
-      const userCreatedAt = document.getElementById('user-created-at');
-      const userAvatar = document.getElementById('user-avatar');
-      const rolePill = document.getElementById('role-pill');
+      const adminAvatar = document.getElementById('admin-avatar');
+      const adminName = document.getElementById('admin-name');
+      const adminEmail = document.getElementById('admin-email');
 
-      const tableBody = document.getElementById('challenges-table-body');
-      const filterChips = document.querySelectorAll('.filter-chip');
+      const statRoster = document.getElementById('stat-roster');
+      const statRegistered = document.getElementById('stat-registered');
+      const statNotRegistered = document.getElementById('stat-not-registered');
+      const statParticipated = document.getElementById('stat-participated');
+      const statNeverParticipated = document.getElementById('stat-never-participated');
+      const statScoreCompletion = document.getElementById('stat-score-completion');
+      const statTotalAttempts = document.getElementById('stat-total-attempts');
 
-      const logoutBtn = document.getElementById('logout-btn');
-      const sidebarLogoutBtn = document.getElementById('sidebar-logout-btn');
+      const challengesTableBody = document.getElementById('challenges-table-body');
 
-      let allChallenges = [];
-      let activeFilter = 'ALL';
-
-      function formatDate(dateValue) {
-        if (!dateValue) return 'N/A';
+      async function verifyAdminAuth() {
         try {
-          const dateObj = new Date(dateValue);
-          if (isNaN(dateObj.getTime())) return 'N/A';
-          return dateObj.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          const res = await fetch(`${API_BASE_URL}/api/user/me`, { credentials: 'include' });
+          if (!res.ok) {
+            if (res.status === 401) { window.location.href = 'login.html'; return false; }
+            throw new Error(`HTTP ${res.status}`);
+          }
+          const user = await res.json();
+          if (user.role !== 'ADMIN') {
+            showError('Access Denied: Admin authorization required.');
+            setTimeout(() => { window.location.href = 'student-dashboard.html'; }, 2000);
+            return false;
+          }
+
+          adminName.textContent = user.name || 'Admin';
+          adminEmail.textContent = user.email || '';
+          adminAvatar.src = user.profileImage || 'https://via.placeholder.com/80';
+          return true;
         } catch (e) {
-          return 'N/A';
+          console.error(e);
+          showError('Authentication failed. Please login again.');
+          return false;
         }
       }
 
-      async function loadAdminDashboardData() {
+      async function fetchStudentIntelligenceStats() {
         try {
-          // 1. Fetch Profile and Verify ADMIN Role
-          const profileRes = await fetch(`${API_BASE_URL}/api/user/me`, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-            credentials: 'include'
-          });
+          const res = await fetch(`${API_BASE_URL}/api/admin/students/intelligence-stats`, { credentials: 'include' });
+          if (!res.ok) return;
+          const stats = await res.json();
 
-          if (!profileRes.ok) {
-            if (profileRes.status === 401) {
-              window.location.href = LOGIN_PAGE_URL;
-              return;
-            }
-            throw new Error(`Profile HTTP ${profileRes.status}`);
-          }
-
-          const user = await profileRes.json();
-
-          if (user.role !== 'ADMIN') {
-            showError('Access Denied: You do not have administrator permissions to view this portal.');
-            setTimeout(() => { window.location.href = 'student-dashboard.html'; }, 2500);
-            return;
-          }
-
-          welcomeTitle.textContent = `Admin Dashboard — Welcome, ${user.name || 'Admin'} 👋`;
-          userName.textContent = user.name || 'Administrator';
-          userUsername.textContent = user.username || 'ADMIN';
-          userEmail.textContent = user.email || '';
-          userId.textContent = `#ADM-${user.id ? String(user.id).padStart(4, '0') : '0000'}`;
-          userRoleDisplay.textContent = user.role || 'ADMIN';
-          rolePill.textContent = user.role || 'ADMIN';
-          userCreatedAt.textContent = formatDate(user.createdAt);
-
-          if (user.profileImage) {
-            userAvatar.src = user.profileImage;
-            userAvatar.onerror = () => {
-              userAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'Admin')}&background=f43f5e&color=fff`;
-            };
-          } else {
-            userAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'Admin')}&background=f43f5e&color=fff`;
-          }
-
-          // 2. Fetch Challenges List
-          await fetchChallenges();
-
-        } catch (err) {
-          console.error('Error loading admin dashboard:', err);
-          showError('Failed to load admin profile or challenges. Please try logging in again.');
-        } finally {
-          if (loadingOverlay) {
-            loadingOverlay.style.opacity = '0';
-            setTimeout(() => { loadingOverlay.style.display = 'none'; }, 300);
-          }
+          statRoster.textContent = stats.totalCollegeRoster;
+          statRegistered.textContent = stats.registeredStudents;
+          statNotRegistered.textContent = stats.notRegisteredStudents;
+          statParticipated.textContent = stats.studentsParticipated;
+          statNeverParticipated.textContent = stats.studentsNeverParticipated;
+          statScoreCompletion.textContent = `${stats.averageScore}% / ${stats.completionRate}%`;
+          statTotalAttempts.textContent = `${stats.totalAttempts} Attempts Logged`;
+        } catch (e) {
+          console.error(e);
         }
       }
 
       async function fetchChallenges() {
         try {
-          const res = await fetch(`${API_BASE_URL}/api/admin/challenges`, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-            credentials: 'include'
-          });
+          const res = await fetch(`${API_BASE_URL}/api/admin/challenges`, { credentials: 'include' });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const challenges = await res.json();
 
-          if (!res.ok) {
-            if (res.status === 403) {
-              showError('Access Denied: Admin authorization required (403 Forbidden).');
-              return;
-            }
-            throw new Error(`HTTP ${res.status}`);
+          if (!challenges || challenges.length === 0) {
+            challengesTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">No challenges configured yet.</td></tr>`;
+            return;
           }
 
-          allChallenges = await res.json();
-          renderChallenges();
-        } catch (e) {
-          console.error('Error fetching challenges:', e);
-          tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--accent-rose); padding: 2rem;">Failed to load challenge repository.</td></tr>`;
-        }
-      }
-
-      function renderChallenges() {
-        let filtered = allChallenges;
-        if (activeFilter !== 'ALL') {
-          filtered = allChallenges.filter(c => c.status === activeFilter);
-        }
-
-        if (!filtered || filtered.length === 0) {
-          tableBody.innerHTML = `
-            <tr>
-              <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
-                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📭</div>
-                <div style="font-weight: 600; font-size: 1rem; color: var(--text-main);">No challenges found</div>
-                <div style="font-size: 0.85rem; margin-top: 0.25rem;">Click "+ Create Challenge" to create your first exam.</div>
-              </td>
-            </tr>`;
-          return;
-        }
-
-        tableBody.innerHTML = filtered.map(c => {
-          const statusClass = (c.status || 'INACTIVE').toLowerCase();
-          const startStr = c.startTime ? formatDate(c.startTime) : 'Immediate';
-          const endStr = c.endTime ? formatDate(c.endTime) : 'No Deadline';
-
-          return `
+          challengesTableBody.innerHTML = challenges.map(c => `
             <tr>
               <td>
-                <strong style="font-family: 'Outfit', sans-serif; font-size: 0.95rem; color: var(--text-main);">${c.title}</strong>
-                <div style="font-size: 0.8rem; color: var(--text-muted); max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                  ${c.description || 'No description'}
-                </div>
+                <div style="font-weight: 700; color: var(--text-main);">${c.title}</div>
+                <div style="font-size: 0.775rem; color: var(--text-muted);">${c.description || ''}</div>
               </td>
-              <td>
-                <span class="badge-tag info" style="margin-bottom: 0.25rem; display: inline-block;">${c.category}</span>
-                <div>
-                  <span class="badge-tag ${c.difficulty === 'HARD' ? 'hard' : (c.difficulty === 'MEDIUM' ? 'medium' : 'easy')}">
-                    ${c.difficulty}
-                  </span>
-                </div>
-              </td>
-              <td style="font-size: 0.8rem; color: var(--text-muted);">
-                <div>🟢 <strong>Start:</strong> ${startStr}</div>
-                <div>🔴 <strong>End:</strong> ${endStr}</div>
-              </td>
+              <td><span class="badge-tag category">${c.category}</span></td>
+              <td><span class="badge-tag ${c.difficulty === 'HARD' ? 'hard' : (c.difficulty === 'MEDIUM' ? 'medium' : 'easy')}">${c.difficulty}</span></td>
               <td>${c.durationMinutes} mins</td>
+              <td>${c.totalQuestions} Qs (${c.totalPoints} Pts)</td>
+              <td><span class="status-badge ${(c.status || (c.active ? 'ACTIVE' : 'INACTIVE')).toLowerCase()}">${c.status || (c.active ? 'ACTIVE' : 'INACTIVE')}</span></td>
               <td>
-                <div style="font-weight: 600;">${c.totalQuestions} questions</div>
-                <div style="font-weight: 700; color: var(--accent-cyan); font-size: 0.825rem;">${c.totalPoints} pts total</div>
-              </td>
-              <td>
-                <span class="status-badge ${statusClass}">
-                  ${c.status || (c.active ? 'ACTIVE' : 'INACTIVE')}
-                </span>
-              </td>
-              <td>
-                <div class="action-btns-group">
-                  <a href="admin-manage-questions.html?id=${c.id}" class="btn-xs btn-secondary" title="Manage Questions">
-                    👁️ Questions (${c.totalQuestions})
-                  </a>
-                  <a href="admin-create-challenge.html?id=${c.id}" class="btn-xs btn-secondary" title="Edit Challenge">
-                    ✏️ Edit
-                  </a>
-                  <button class="btn-xs btn-secondary toggle-status-btn" data-id="${c.id}" data-active="${c.active}" title="Toggle Active Status">
+                <div style="display: flex; gap: 0.4rem;">
+                  <a href="admin-manage-questions.html?id=${c.id}" class="btn-xs btn-secondary" title="Manage Questions">❓ Questions</a>
+                  <button class="btn-xs btn-secondary toggle-status-btn" data-id="${c.id}" data-active="${c.active}">
                     ${c.active ? '⏸️ Deactivate' : '▶️ Activate'}
                   </button>
-                  <a href="admin-attempts.html?challengeId=${c.id}" class="btn-xs btn-secondary" title="View Attempts">
-                    ⏱️ Attempts
-                  </a>
                 </div>
               </td>
             </tr>
-          `;
-        }).join('');
+          `).join('');
 
-        // Attach event listeners for status toggle buttons
-        document.querySelectorAll('.toggle-status-btn').forEach(btn => {
-          btn.addEventListener('click', async (e) => {
-            const id = e.target.getAttribute('data-id');
-            const currentActive = e.target.getAttribute('data-active') === 'true';
-            const newActive = !currentActive;
+          document.querySelectorAll('.toggle-status-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+              const id = e.target.getAttribute('data-id');
+              const currentActive = e.target.getAttribute('data-active') === 'true';
+              const newActive = !currentActive;
 
-            try {
-              const toggleRes = await fetch(`${API_BASE_URL}/api/admin/challenges/${id}/status?active=${newActive}`, {
-                method: 'POST',
-                credentials: 'include'
-              });
-              if (toggleRes.ok) {
-                await fetchChallenges();
-              } else {
-                // Fallback to PATCH if POST returns 405
-                const patchRes = await fetch(`${API_BASE_URL}/api/admin/challenges/${id}/status?active=${newActive}`, {
-                  method: 'PATCH',
+              try {
+                const toggleRes = await fetch(`${API_BASE_URL}/api/admin/challenges/${id}/status?active=${newActive}`, {
+                  method: 'POST',
                   credentials: 'include'
                 });
-                if (patchRes.ok) {
+                if (toggleRes.ok) {
                   await fetchChallenges();
+                  await fetchStudentIntelligenceStats();
                 } else {
                   alert('Failed to update challenge status.');
                 }
+              } catch (err) {
+                console.error(err);
+                alert('Error updating challenge status.');
               }
-            } catch (err) {
-              console.error(err);
-              alert('Error updating challenge status.');
-            }
+            });
           });
-        });
-      }
-
-      filterChips.forEach(chip => {
-        chip.addEventListener('click', () => {
-          filterChips.forEach(c => c.classList.remove('active'));
-          chip.classList.add('active');
-          activeFilter = chip.getAttribute('data-filter');
-          renderChallenges();
-        });
-      });
-
-      function showError(msg) {
-        if (errorBanner && errorBannerText) {
-          errorBannerText.textContent = msg;
-          errorBanner.style.display = 'flex';
+        } catch (e) {
+          console.error(e);
+          challengesTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--accent-rose); padding: 2rem;">Failed to load challenges.</td></tr>`;
         }
       }
 
-      function handleLogout(e) {
-        if (e) e.preventDefault();
-        window.location.href = `${API_BASE_URL}/logout`;
+      function showError(msg) {
+        errorBannerText.textContent = msg;
+        errorBanner.style.display = 'flex';
       }
 
-      if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
-      if (sidebarLogoutBtn) sidebarLogoutBtn.addEventListener('click', handleLogout);
+      const logoutHandler = (e) => { e.preventDefault(); window.location.href = `${API_BASE_URL}/logout`; };
+      document.getElementById('logout-btn').addEventListener('click', logoutHandler);
+      document.getElementById('sidebar-logout-btn').addEventListener('click', logoutHandler);
 
-      await loadAdminDashboardData();
+      try {
+        const authenticated = await verifyAdminAuth();
+        if (authenticated) {
+          await fetchStudentIntelligenceStats();
+          await fetchChallenges();
+        }
+      } finally {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+      }
     });
   </script>
 </body>

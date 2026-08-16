@@ -332,5 +332,56 @@ class AdminControllerTest {
         when(authService.getAuthenticatedUser(any())).thenReturn(studentUser);
         assertThrows(ResponseStatusException.class, () -> challengeService.startChallenge(upcoming.getId(), studentUser));
     }
+
+    // 21. Delete question returns 409 CONFLICT when referenced by student attempt answers
+    @Test
+    void test21_DeleteQuestionConflictWhenReferencedInAttempt() {
+        when(authService.getAuthenticatedUser(any())).thenReturn(studentUser);
+        StartChallengeResponse startResp = challengeService.startChallenge(testChallenge.getId(), studentUser);
+        challengeService.submitChallenge(testChallenge.getId(), new SubmitChallengeRequest(startResp.attemptId(), Map.of(q1.getId(), "B")), studentUser);
+
+        when(authService.getAuthenticatedUser(any())).thenReturn(adminUser);
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> adminQuestionController.deleteQuestion(q1.getId(), mockAdminOAuth2User));
+        assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
+        assertTrue(ex.getReason().contains("past student attempts"));
+    }
+
+    // 22. Delete question unlinks and deletes safely when no student attempts exist
+    @Test
+    void test22_DeleteUnusedQuestionAndUnlinkFromChallenge() {
+        when(authService.getAuthenticatedUser(any())).thenReturn(adminUser);
+
+        AdminQuestionRequest req = new AdminQuestionRequest("Unused Q?", "A", "B", "C", "D", "A", 10, "Exp", testChallenge.getId());
+        ResponseEntity<AdminQuestionResponse> created = adminQuestionController.createQuestion(req, mockAdminOAuth2User);
+        Long newQId = created.getBody().id();
+
+        ResponseEntity<Void> deleted = adminQuestionController.deleteQuestion(newQId, mockAdminOAuth2User);
+        assertEquals(HttpStatus.NO_CONTENT, deleted.getStatusCode());
+    }
+
+    // 23. Edit question updates all fields and persists accurately
+    @Test
+    void test23_EditQuestionPersistsData() {
+        when(authService.getAuthenticatedUser(any())).thenReturn(adminUser);
+
+        AdminQuestionRequest updateReq = new AdminQuestionRequest(
+                "Updated Question Prompt?",
+                "Opt A1",
+                "Opt B1",
+                "Opt C1",
+                "Opt D1",
+                "C",
+                15,
+                "Updated Explanation Steps",
+                testChallenge.getId()
+        );
+
+        ResponseEntity<AdminQuestionResponse> updatedResp = adminQuestionController.updateQuestion(q1.getId(), updateReq, mockAdminOAuth2User);
+        assertEquals(HttpStatus.OK, updatedResp.getStatusCode());
+        assertEquals("Updated Question Prompt?", updatedResp.getBody().questionText());
+        assertEquals("C", updatedResp.getBody().correctOption());
+        assertEquals(15, updatedResp.getBody().points());
+        assertEquals("Updated Explanation Steps", updatedResp.getBody().explanation());
+    }
 }
 

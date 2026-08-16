@@ -32,11 +32,14 @@ public class CustomOAuth2UserService extends OidcUserService {
     private static final Logger log = LoggerFactory.getLogger(CustomOAuth2UserService.class);
 
     private final UserRepository userRepository;
+    private final AdminAccessService adminAccessService;
     private final Set<String> adminEmails;
 
     public CustomOAuth2UserService(UserRepository userRepository,
+                                  AdminAccessService adminAccessService,
                                   @Value("${app.admin.emails:244g1a05cp@srit.ac.in}") String adminEmailsConfig) {
         this.userRepository = userRepository;
+        this.adminAccessService = adminAccessService;
         this.adminEmails = Arrays.stream(adminEmailsConfig.split(","))
                 .map(String::trim)
                 .map(String::toLowerCase)
@@ -46,7 +49,14 @@ public class CustomOAuth2UserService extends OidcUserService {
     }
 
     private boolean isAdminEmail(String email) {
-        return email != null && adminEmails.contains(email.trim().toLowerCase());
+        if (email == null || email.trim().isEmpty()) {
+            return false;
+        }
+        String clean = email.trim().toLowerCase();
+        if (adminEmails.contains(clean)) {
+            return true;
+        }
+        return adminAccessService.isEmailAdmin(clean);
     }
 
     @Override
@@ -86,7 +96,8 @@ public class CustomOAuth2UserService extends OidcUserService {
      * or creates a new user with ADMIN or STUDENT role depending on email configuration.
      */
     private User processOAuthUser(String googleId, String name, String email, String picture) {
-        Role targetRole = isAdminEmail(email) ? Role.ADMIN : Role.STUDENT;
+        boolean admin = isAdminEmail(email);
+        Role targetRole = admin ? Role.ADMIN : Role.STUDENT;
 
         Optional<User> userByGoogleId = userRepository.findByGoogleId(googleId);
 
@@ -95,9 +106,7 @@ public class CustomOAuth2UserService extends OidcUserService {
             log.info("[DEBUG] Existing user found by Google ID: {}", email);
             existingUser.setName(name);
             existingUser.setProfileImage(picture);
-            if (isAdminEmail(email)) {
-                existingUser.setRole(Role.ADMIN);
-            }
+            existingUser.setRole(targetRole);
             return userRepository.save(existingUser);
         }
 
@@ -112,9 +121,7 @@ public class CustomOAuth2UserService extends OidcUserService {
             }
             existingUser.setName(name);
             existingUser.setProfileImage(picture);
-            if (isAdminEmail(email)) {
-                existingUser.setRole(Role.ADMIN);
-            }
+            existingUser.setRole(targetRole);
             return userRepository.save(existingUser);
         }
 
