@@ -319,4 +319,18 @@ class AdminControllerTest {
         assertEquals(HttpStatus.OK, leaderboard.getStatusCode());
         assertNotNull(leaderboard.getBody());
     }
+
+    // 20. Challenge schedule window validation (startTime and endTime)
+    @Test
+    void test20_ChallengeScheduleValidationAndStatusResolution() {
+        when(authService.getAuthenticatedUser(any())).thenReturn(adminUser);
+
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        // Upcoming challenge in the future
+        Challenge upcoming = challengeRepository.save(new Challenge("Upcoming Quiz", "Desc", Category.CODING, Difficulty.HARD, 20, 0, 0, true, now.plusHours(2), now.plusHours(4), com.sundaychallenge.entity.enums.ChallengeStatus.UPCOMING));
+
+        when(authService.getAuthenticatedUser(any())).thenReturn(studentUser);
+        assertThrows(ResponseStatusException.class, () -> challengeService.startChallenge(upcoming.getId(), studentUser));
+    }
 }
+

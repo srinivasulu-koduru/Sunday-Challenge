@@ -40,9 +40,7 @@
       <aside class="sidebar">
         <div class="sidebar-title">Admin Management</div>
         <a href="admin-dashboard.html" class="sidebar-link"><span>📊 Dashboard</span></a>
-        <a href="admin-students.html" class="sidebar-link"><span>👥 Students</span></a>
         <a href="admin-challenges.html" class="sidebar-link active"><span>📝 Challenges</span></a>
-        <a href="admin-questions.html" class="sidebar-link"><span>❓ Questions</span></a>
         <a href="admin-attempts.html" class="sidebar-link"><span>⏱️ Attempts</span></a>
         <a href="admin-leaderboard.html" class="sidebar-link"><span>🏆 Leaderboard</span></a>
         <a href="admin-reports.html" class="sidebar-link"><span>📈 Reports</span></a>
@@ -53,7 +51,7 @@
         <section class="card">
           <div class="card-header">
             <h1 class="card-title">📝 Challenge Repository</h1>
-            <button id="create-challenge-btn" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem;">+ Create Challenge</button>
+            <a href="admin-create-challenge.html" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; text-decoration: none;">+ Create Challenge</a>
           </div>
 
           <div class="table-responsive">
@@ -68,10 +66,11 @@
                   <th>Questions</th>
                   <th>Points</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="challenges-table-body">
-                <tr><td colspan="8" style="text-align: center; padding: 2rem;">Loading challenges...</td></tr>
+                <tr><td colspan="9" style="text-align: center; padding: 2rem;">Loading challenges...</td></tr>
               </tbody>
             </table>
           </div>
@@ -81,7 +80,7 @@
   </main>
 
   <footer>
-    <p>Sunday Challenge Platform — Admin Management System (Stage 5 Active)</p>
+    <p>Sunday Challenge Platform — Admin Management System (Stage 5 Refined)</p>
   </footer>
 
   <script>
@@ -101,7 +100,7 @@
           renderChallenges(challenges);
         } catch (e) {
           console.error(e);
-          tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--accent-rose); padding: 2rem;">Failed to load challenges.</td></tr>`;
+          tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--accent-rose); padding: 2rem;">Failed to load challenges.</td></tr>`;
         } finally {
           if (loadingOverlay) loadingOverlay.style.display = 'none';
         }
@@ -109,7 +108,7 @@
 
       function renderChallenges(challenges) {
         if (!challenges || challenges.length === 0) {
-          tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2rem;">No challenges found.</td></tr>`;
+          tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 2rem;">No challenges found.</td></tr>`;
           return;
         }
         tableBody.innerHTML = challenges.map(c => `
@@ -122,17 +121,19 @@
             <td>${c.totalQuestions}</td>
             <td style="font-weight: 700; color: var(--accent-cyan);">${c.totalPoints} pts</td>
             <td>
-              <span class="status-pill ${c.active ? 'online' : ''}" style="${c.active ? '' : 'background: rgba(244,63,94,0.15); color: #fda4af;'}">
-                ${c.active ? 'ACTIVE' : 'INACTIVE'}
+              <span class="badge-tag ${c.status === 'ACTIVE' ? 'easy' : 'hard'}">
+                ${c.status || (c.active ? 'ACTIVE' : 'INACTIVE')}
               </span>
+            </td>
+            <td>
+              <div style="display: flex; gap: 0.4rem;">
+                <a href="admin-manage-questions.html?id=${c.id}" class="btn btn-secondary btn-sm" style="text-decoration: none;">👁️ Questions</a>
+                <a href="admin-create-challenge.html?id=${c.id}" class="btn btn-secondary btn-sm" style="text-decoration: none;">✏️ Edit</a>
+              </div>
             </td>
           </tr>
         `).join('');
       }
-
-      document.getElementById('create-challenge-btn').addEventListener('click', () => {
-        alert('Challenge creation form active in admin API. Use POST /api/admin/challenges.');
-      });
 
       const logoutHandler = (e) => { e.preventDefault(); window.location.href = `${API_BASE_URL}/logout`; };
       document.getElementById('logout-btn').addEventListener('click', logoutHandler);

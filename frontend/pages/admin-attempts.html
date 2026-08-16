@@ -3,24 +3,68 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Sunday Challenge — Admin Attempt Logs">
+  <meta name="description" content="Sunday Challenge — Admin Attempt Logs & Response Inspection">
   <title>Attempt Logs — Sunday Challenge</title>
   <link rel="stylesheet" href="../css/style.css">
   <style>
+    .filter-section-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      align-items: flex-end;
+    }
     .table-responsive { width: 100%; overflow-x: auto; }
     .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
     .data-table th, .data-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); }
     .data-table th { background: rgba(15, 23, 42, 0.6); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
     .data-table tr:hover { background: rgba(255, 255, 255, 0.02); }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(9, 13, 22, 0.88);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .modal-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 1.75rem;
+    }
+    .q-resp-box {
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius-sm);
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      margin-bottom: 0.75rem;
+    }
   </style>
 </head>
 <body>
 
+  <!-- Loading Overlay -->
   <div id="loading-overlay" class="loading-overlay">
     <div class="spinner"></div>
-    <div class="loading-text">Loading Attempt Logs...</div>
+    <div class="loading-text">Loading attempt monitoring logs...</div>
   </div>
 
+  <!-- Header Navigation -->
   <header>
     <nav class="navbar">
       <a href="../index.html" class="brand">
@@ -36,23 +80,61 @@
 
   <main class="container">
     <div class="dashboard-layout">
+      <!-- Admin Sidebar Navigation -->
       <aside class="sidebar">
         <div class="sidebar-title">Admin Management</div>
         <a href="admin-dashboard.html" class="sidebar-link"><span>📊 Dashboard</span></a>
-        <a href="admin-students.html" class="sidebar-link"><span>👥 Students</span></a>
         <a href="admin-challenges.html" class="sidebar-link"><span>📝 Challenges</span></a>
-        <a href="admin-questions.html" class="sidebar-link"><span>❓ Questions</span></a>
         <a href="admin-attempts.html" class="sidebar-link active"><span>⏱️ Attempts</span></a>
         <a href="admin-leaderboard.html" class="sidebar-link"><span>🏆 Leaderboard</span></a>
         <a href="admin-reports.html" class="sidebar-link"><span>📈 Reports</span></a>
         <a href="#" id="sidebar-logout-btn" class="sidebar-link" style="color: var(--accent-rose); margin-top: 1rem;"><span>🚪 Logout</span></a>
       </aside>
 
+      <!-- Main Content -->
       <div class="main-content">
+
+        <!-- Active Challenge Attempts Prominent Banner -->
+        <section class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%);">
+          <div class="card-header" style="border: none; padding: 0; margin-bottom: 0.5rem;">
+            <h2 class="card-title" style="color: var(--accent-emerald);">⚡ Active Challenge Live Attempts</h2>
+            <span class="status-pill online"><span class="status-dot"></span> LIVE MONITORING</span>
+          </div>
+          <p id="active-challenges-banner-text" style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">
+            Checking for currently active challenge attempts...
+          </p>
+        </section>
+
+        <!-- Search & Filter Controls Card -->
+        <section class="filter-section-card">
+          <div class="filter-grid">
+            <div class="form-group" style="grid-column: span 2;">
+              <label class="form-label">Search Keyword</label>
+              <input type="text" id="search-input" class="form-control" placeholder="Search student name, roll number, email, or challenge title..." />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Attempt Status</label>
+              <select id="status-filter" class="form-control">
+                <option value="">All Statuses</option>
+                <option value="IN_PROGRESS">IN_PROGRESS</option>
+                <option value="COMPLETED">COMPLETED</option>
+                <option value="EXPIRED">EXPIRED</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem;">
+              <button id="search-btn" class="btn" style="padding: 0.75rem 1.25rem;">Search</button>
+              <button id="reset-btn" class="btn btn-secondary" style="padding: 0.75rem 1rem;">Reset</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Attempts Table Card -->
         <section class="card">
           <div class="card-header">
-            <h1 class="card-title">⏱️ Student Attempt Logs</h1>
-            <span style="font-size: 0.85rem; color: var(--text-muted);" id="attempt-count-label">0 Total Attempts</span>
+            <h1 class="card-title">⏱️ All Student Attempt Logs</h1>
+            <span style="font-size: 0.85rem; color: var(--text-muted);" id="attempt-count-label">0 Attempts Logged</span>
           </div>
 
           <div class="table-responsive">
@@ -60,34 +142,74 @@
               <thead>
                 <tr>
                   <th>Attempt ID</th>
-                  <th>Student Name / Roll No</th>
+                  <th>Student Info</th>
                   <th>Challenge Title</th>
                   <th>Status</th>
                   <th>Score</th>
-                  <th>Points Earned</th>
+                  <th>Points</th>
                   <th>Started At</th>
+                  <th>Inspect Response</th>
                 </tr>
               </thead>
               <tbody id="attempts-table-body">
-                <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading attempt logs...</td></tr>
+                <tr><td colspan="8" style="text-align: center; padding: 2rem;">Loading attempt logs...</td></tr>
               </tbody>
             </table>
           </div>
         </section>
+
       </div>
     </div>
   </main>
 
+  <!-- Question Detail Response Modal -->
+  <div id="resp-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="card-header">
+        <h2 id="resp-modal-title" class="card-title">🔍 Attempt Question Responses Inspection</h2>
+        <button type="button" id="close-resp-modal-btn" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+
+      <div id="resp-modal-summary" style="margin-bottom: 1.25rem; font-size: 0.9rem; color: var(--text-muted);">
+        Loading response breakdown...
+      </div>
+
+      <div id="resp-modal-body">
+        <!-- Question Response Breakdown Rendered Here -->
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+        <button type="button" id="close-resp-btn" class="btn btn-secondary">Close Inspection</button>
+      </div>
+    </div>
+  </div>
+
   <footer>
-    <p>Sunday Challenge Platform — Admin Management System (Stage 5 Active)</p>
+    <p>Sunday Challenge Platform — Admin Management System (Stage 5 Refined)</p>
   </footer>
 
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const API_BASE_URL = 'http://localhost:8080';
+      const urlParams = new URLSearchParams(window.location.search);
+      const prefilterChallengeId = urlParams.get('challengeId');
+
       const loadingOverlay = document.getElementById('loading-overlay');
       const tableBody = document.getElementById('attempts-table-body');
       const countLabel = document.getElementById('attempt-count-label');
+      const bannerText = document.getElementById('active-challenges-banner-text');
+
+      const searchInput = document.getElementById('search-input');
+      const statusFilter = document.getElementById('status-filter');
+      const searchBtn = document.getElementById('search-btn');
+      const resetBtn = document.getElementById('reset-btn');
+
+      const respModal = document.getElementById('resp-modal');
+      const respTitle = document.getElementById('resp-modal-title');
+      const respSummary = document.getElementById('resp-modal-summary');
+      const respBody = document.getElementById('resp-modal-body');
+      const closeRespModalBtn = document.getElementById('close-resp-modal-btn');
+      const closeRespBtn = document.getElementById('close-resp-btn');
 
       function formatDate(dateValue) {
         if (!dateValue) return 'N/A';
@@ -99,33 +221,49 @@
 
       async function fetchAttempts() {
         try {
-          const res = await fetch(`${API_BASE_URL}/api/admin/attempts`, { credentials: 'include' });
+          let url = `${API_BASE_URL}/api/admin/attempts?`;
+          if (prefilterChallengeId) url += `challengeId=${prefilterChallengeId}&`;
+          if (searchInput.value.trim()) url += `username=${encodeURIComponent(searchInput.value.trim())}&`;
+          if (statusFilter.value) url += `status=${statusFilter.value}&`;
+
+          const res = await fetch(url, { credentials: 'include' });
           if (!res.ok) {
             if (res.status === 401) { window.location.href = 'login.html'; return; }
             throw new Error(`HTTP ${res.status}`);
           }
           const attempts = await res.json();
           renderAttempts(attempts);
+          updateActiveBanner(attempts);
         } catch (e) {
           console.error(e);
-          tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--accent-rose); padding: 2rem;">Failed to load attempt logs.</td></tr>`;
+          tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--accent-rose); padding: 2rem;">Failed to load attempt logs.</td></tr>`;
         } finally {
           if (loadingOverlay) loadingOverlay.style.display = 'none';
+        }
+      }
+
+      function updateActiveBanner(attempts) {
+        const inProgress = attempts.filter(a => a.status === 'IN_PROGRESS');
+        if (inProgress.length > 0) {
+          bannerText.innerHTML = `🔥 <strong>${inProgress.length} Student Attempt(s) currently IN_PROGRESS!</strong>`;
+        } else {
+          bannerText.textContent = 'No student attempts currently in-progress.';
         }
       }
 
       function renderAttempts(attempts) {
         countLabel.textContent = `${attempts ? attempts.length : 0} Total Attempts`;
         if (!attempts || attempts.length === 0) {
-          tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem;">No student attempts logged yet.</td></tr>`;
+          tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">No student attempts match criteria.</td></tr>`;
           return;
         }
+
         tableBody.innerHTML = attempts.map(a => `
           <tr>
-            <td>#${a.attemptId}</td>
+            <td style="font-weight: 700;">#${a.attemptId}</td>
             <td>
               <div style="font-weight: 600;">${a.studentName || 'Student'}</div>
-              <div style="font-size: 0.75rem; color: var(--accent-cyan);">${a.username || ''}</div>
+              <div style="font-size: 0.775rem; color: var(--accent-cyan);">${a.username || ''}</div>
             </td>
             <td style="font-weight: 600;">${a.challengeTitle}</td>
             <td>
@@ -136,9 +274,67 @@
             <td>${a.status === 'IN_PROGRESS' ? 'In Progress' : `${a.score} / ${a.totalPoints}`}</td>
             <td style="font-weight: 700; color: var(--accent-emerald);">${a.status === 'IN_PROGRESS' ? 'Pending' : `+${a.pointsEarned} pts`}</td>
             <td style="color: var(--text-muted); font-size: 0.8rem;">${formatDate(a.startedAt)}</td>
+            <td>
+              <button class="btn-xs btn-secondary inspect-btn" data-id="${a.attemptId}">🔍 Inspect</button>
+            </td>
           </tr>
         `).join('');
+
+        document.querySelectorAll('.inspect-btn').forEach(b => {
+          b.addEventListener('click', (e) => {
+            const attId = parseInt(e.target.getAttribute('data-id'));
+            openInspectionModal(attId);
+          });
+        });
       }
+
+      async function openInspectionModal(attId) {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/admin/attempts/${attId}`, { credentials: 'include' });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+          const d = await res.json();
+          respTitle.textContent = `🔍 Attempt #${d.attemptId} Inspection`;
+          respSummary.innerHTML = `
+            <strong>Student:</strong> ${d.studentName} (${d.username}) | 
+            <strong>Challenge:</strong> ${d.challengeTitle} | 
+            <strong>Status:</strong> ${d.status} | 
+            <strong>Score:</strong> ${d.score}/${d.totalPoints} (${d.percentage}%) | 
+            <strong>Time Taken:</strong> ${d.timeTakenSeconds}s
+          `;
+
+          if (!d.questionDetails || d.questionDetails.length === 0) {
+            respBody.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--text-muted);">No question response details recorded.</div>`;
+          } else {
+            respBody.innerHTML = d.questionDetails.map((q, idx) => `
+              <div class="q-resp-box">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+                  <strong>Q${idx + 1}. ${q.questionText}</strong>
+                  <span class="badge-tag ${q.correct ? 'easy' : 'hard'}">${q.correct ? 'CORRECT (+ ' + q.pointsEarned + ' pts)' : 'WRONG / UNANSWERED'}</span>
+                </div>
+                <div style="font-size: 0.85rem; margin-top: 0.3rem;">
+                  <div>👉 <strong>Student Selected:</strong> ${q.selectedOption ? 'Option ' + q.selectedOption : 'Unanswered'}</div>
+                  <div>✅ <strong>Correct Option:</strong> Option ${q.correctOption}</div>
+                  ${q.explanation ? `<div style="color: var(--text-muted); margin-top: 0.3rem;">💡 <em>${q.explanation}</em></div>` : ''}
+                </div>
+              </div>
+            `).join('');
+          }
+
+          respModal.style.display = 'flex';
+        } catch (err) {
+          console.error(err);
+          alert('Failed to load attempt question response details.');
+        }
+      }
+
+      function closeModal() { respModal.style.display = 'none'; }
+      closeRespModalBtn.addEventListener('click', closeModal);
+      closeRespBtn.addEventListener('click', closeModal);
+
+      searchBtn.addEventListener('click', () => fetchAttempts());
+      searchInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') fetchAttempts(); });
+      resetBtn.addEventListener('click', () => { searchInput.value = ''; statusFilter.value = ''; fetchAttempts(); });
 
       const logoutHandler = (e) => { e.preventDefault(); window.location.href = `${API_BASE_URL}/logout`; };
       document.getElementById('logout-btn').addEventListener('click', logoutHandler);

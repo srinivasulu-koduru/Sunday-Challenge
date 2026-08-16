@@ -87,6 +87,15 @@ public class ChallengeService {
         Challenge challenge = challengeRepository.findByIdAndActiveTrue(challengeId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Challenge not found or inactive"));
 
+        // Authoritative Schedule Window Checks
+        LocalDateTime now = LocalDateTime.now();
+        if (challenge.getStartTime() != null && now.isBefore(challenge.getStartTime())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Challenge is upcoming and not yet available for attempts");
+        }
+        if (challenge.getEndTime() != null && now.isAfter(challenge.getEndTime())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Challenge availability window has ended");
+        }
+
         // Reuse existing IN_PROGRESS attempt if user has one for this challenge
         List<Attempt> inProgressAttempts = attemptRepository.findByUserIdAndStatus(user.getId(), AttemptStatus.IN_PROGRESS);
         Optional<Attempt> existingActiveOpt = inProgressAttempts.stream()

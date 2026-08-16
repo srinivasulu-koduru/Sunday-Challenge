@@ -13,8 +13,8 @@
       display: inline-block;
     }
     .user-avatar-img {
-      width: 90px;
-      height: 90px;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
       object-fit: cover;
       border: 3px solid var(--accent-rose);
@@ -36,14 +36,14 @@
     .profile-card-content {
       display: flex;
       align-items: center;
-      gap: 1.75rem;
+      gap: 1.5rem;
     }
     .profile-details {
       flex: 1;
     }
     .profile-name {
       font-family: 'Outfit', sans-serif;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       font-weight: 700;
       color: var(--text-main);
       line-height: 1.2;
@@ -105,59 +105,84 @@
       background-color: var(--accent-rose);
       box-shadow: 0 0 8px var(--accent-rose);
     }
-    .quick-actions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1.25rem;
-      margin-top: 1rem;
-    }
-    .action-card {
-      background: var(--surface-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg);
-      padding: 1.35rem;
-      transition: all var(--transition-normal);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      text-decoration: none;
-      color: var(--text-main);
-    }
-    .action-card:hover {
-      transform: translateY(-3px);
-      border-color: var(--accent-rose);
-      box-shadow: var(--shadow-glow-rose);
-    }
-    .action-header {
+
+    /* Challenge Management Grid & Cards */
+    .filter-bar {
       display: flex;
       align-items: center;
-      gap: 0.85rem;
-      margin-bottom: 0.75rem;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
     }
-    .action-icon {
-      font-size: 1.75rem;
-      padding: 0.5rem;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.05);
-    }
-    .action-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.1rem;
-      font-weight: 700;
-    }
-    .action-desc {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      line-height: 1.4;
-      margin-bottom: 1rem;
-    }
-    .action-footer {
-      font-size: 0.825rem;
+    .filter-chip {
+      padding: 0.4rem 0.9rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
       font-weight: 600;
-      color: var(--accent-rose);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .filter-chip:hover, .filter-chip.active {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fda4af;
+      border-color: rgba(244, 63, 94, 0.4);
+    }
+
+    .challenges-table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    .data-table th, .data-table td {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .data-table th {
+      background: rgba(15, 23, 42, 0.7);
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+    .data-table tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .status-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      text-transform: uppercase;
+    }
+    .status-badge.active { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .status-badge.upcoming { background: rgba(6, 182, 212, 0.15); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.3); }
+    .status-badge.completed { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+    .status-badge.inactive { background: rgba(244, 63, 94, 0.15); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.3); }
+    .status-badge.draft { background: rgba(245, 158, 11, 0.15); color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+    .action-btns-group {
       display: flex;
       align-items: center;
-      gap: 0.3rem;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+    .btn-xs {
+      padding: 0.3rem 0.65rem;
+      font-size: 0.775rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -206,14 +231,8 @@
         <a href="admin-dashboard.html" class="sidebar-link active">
           <span>📊 Dashboard</span>
         </a>
-        <a href="admin-students.html" class="sidebar-link">
-          <span>👥 Students</span>
-        </a>
         <a href="admin-challenges.html" class="sidebar-link">
           <span>📝 Challenges</span>
-        </a>
-        <a href="admin-questions.html" class="sidebar-link">
-          <span>❓ Questions</span>
         </a>
         <a href="admin-attempts.html" class="sidebar-link">
           <span>⏱️ Attempts</span>
@@ -234,11 +253,11 @@
 
         <!-- Welcome Banner -->
         <section class="card" style="background: linear-gradient(135deg, rgba(244, 63, 94, 0.12) 0%, rgba(99, 102, 241, 0.08) 100%);">
-          <h1 id="welcome-title" class="hero-title" style="font-size: 2.1rem; text-align: left; margin-bottom: 0.35rem;">
+          <h1 id="welcome-title" class="hero-title" style="font-size: 2rem; text-align: left; margin-bottom: 0.35rem;">
             Admin Dashboard 👋
           </h1>
           <p class="hero-desc" style="text-align: left; margin: 0; font-size: 0.95rem;">
-            Authenticated session active. Monitor platform metrics, manage challenge repositories, view student attempts, and analyze performance reports.
+            Manage challenge schedules, configure exam questions, monitor live student attempts, and view platform reports.
           </p>
         </section>
 
@@ -253,17 +272,15 @@
           </div>
 
           <div class="profile-card-content">
-            <!-- Profile Avatar with Fallback -->
             <div class="avatar-wrapper">
               <img id="user-avatar" src="https://ui-avatars.com/api/?name=Admin&background=f43f5e&color=fff" alt="Admin Profile" class="user-avatar-img" />
               <span id="role-pill" class="role-pill-overlay">ADMIN</span>
             </div>
 
-            <!-- Profile Details Grid -->
             <div class="profile-details">
               <div class="admin-tag">Platform Super Administrator</div>
               <div id="user-name" class="profile-name">Loading...</div>
-              <div id="user-email" style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 0.75rem;">
+              <div id="user-email" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
                 loading@example.com
               </div>
 
@@ -289,207 +306,52 @@
           </div>
         </section>
 
-        <!-- Real Platform Statistics Grid -->
-        <section style="margin-bottom: 1.75rem;">
-          <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">
-            📊 Platform Statistics Overview
-          </h2>
-
-          <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
-            <!-- Stat 1: Total Students -->
-            <div class="stat-card">
-              <div class="stat-info">
-                <span class="stat-value" id="stat-total-students">0</span>
-                <span class="stat-label">Total Students</span>
-              </div>
-              <div class="stat-icon-bg cyan">👥</div>
-            </div>
-
-            <!-- Stat 2: Total Challenges -->
-            <div class="stat-card">
-              <div class="stat-info">
-                <span class="stat-value" id="stat-total-challenges">0</span>
-                <span class="stat-label">Total Challenges (<span id="stat-active-challenges" style="color: var(--accent-emerald);">0 Active</span>)</span>
-              </div>
-              <div class="stat-icon-bg">📝</div>
-            </div>
-
-            <!-- Stat 3: Question Bank Size -->
-            <div class="stat-card">
-              <div class="stat-info">
-                <span class="stat-value" id="stat-total-questions">0</span>
-                <span class="stat-label">Total Questions</span>
-              </div>
-              <div class="stat-icon-bg amber">❓</div>
-            </div>
-
-            <!-- Stat 4: Total Attempts -->
-            <div class="stat-card">
-              <div class="stat-info">
-                <span class="stat-value" id="stat-total-attempts">0</span>
-                <span class="stat-label">Total Attempts</span>
-              </div>
-              <div class="stat-icon-bg rose">⏱️</div>
-            </div>
-
-            <!-- Stat 5: Completed Attempts -->
-            <div class="stat-card">
-              <div class="stat-info">
-                <span class="stat-value" id="stat-completed-attempts">0</span>
-                <span class="stat-label">Completed Attempts</span>
-              </div>
-              <div class="stat-icon-bg emerald">✅</div>
-            </div>
-
-            <!-- Stat 6: In-Progress Attempts -->
-            <div class="stat-card">
-              <div class="stat-info">
-                <span class="stat-value" id="stat-in-progress-attempts">0</span>
-                <span class="stat-label">In-Progress Attempts</span>
-              </div>
-              <div class="stat-icon-bg amber">⏳</div>
-            </div>
-
-            <!-- Stat 7: Expired Attempts -->
-            <div class="stat-card">
-              <div class="stat-info">
-                <span class="stat-value" id="stat-expired-attempts">0</span>
-                <span class="stat-label">Expired Attempts</span>
-              </div>
-              <div class="stat-icon-bg rose">⚠️</div>
-            </div>
-
-            <!-- Stat 8: Total Points Earned -->
-            <div class="stat-card">
-              <div class="stat-info">
-                <span class="stat-value" id="stat-points-earned">0</span>
-                <span class="stat-label">Total Points Earned</span>
-              </div>
-              <div class="stat-icon-bg cyan">🏆</div>
-            </div>
-
-            <!-- Stat 9: Average Score -->
-            <div class="stat-card">
-              <div class="stat-info">
-                <span class="stat-value" id="stat-average-score">0%</span>
-                <span class="stat-label">Average Score</span>
-              </div>
-              <div class="stat-icon-bg emerald">📈</div>
-            </div>
-
-            <!-- Stat 10: Completion Rate -->
-            <div class="stat-card">
-              <div class="stat-info">
-                <span class="stat-value" id="stat-completion-rate">0%</span>
-                <span class="stat-label">Completion Rate</span>
-              </div>
-              <div class="stat-icon-bg">🎯</div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Quick Action Management Portals -->
+        <!-- Challenge Management Section -->
         <section class="card">
-          <div class="card-header">
-            <h2 class="card-title">⚡ Management Modules</h2>
+          <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h2 class="card-title">📝 Challenge Management</h2>
+              <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+                Create, schedule, activate, and manage question banks for all assessments.
+              </div>
+            </div>
+
+            <a href="admin-create-challenge.html" class="btn" style="padding: 0.6rem 1.25rem; font-size: 0.9rem;">
+              + Create Challenge
+            </a>
           </div>
 
-          <div class="quick-actions-grid">
-            <!-- Action 1: Manage Students -->
-            <a href="admin-students.html" class="action-card">
-              <div>
-                <div class="action-header">
-                  <div class="action-icon">👥</div>
-                  <div class="action-title">Student Directory</div>
-                </div>
-                <div class="action-desc">
-                  Inspect student profiles, search by college roll number/email, and analyze individual performance records.
-                </div>
-              </div>
-              <div class="action-footer">
-                Manage Students →
-              </div>
-            </a>
+          <!-- Status Filter Bar -->
+          <div class="filter-bar">
+            <span class="filter-chip active" data-filter="ALL">All Statuses</span>
+            <span class="filter-chip" data-filter="ACTIVE">Active</span>
+            <span class="filter-chip" data-filter="UPCOMING">Upcoming</span>
+            <span class="filter-chip" data-filter="COMPLETED">Completed</span>
+            <span class="filter-chip" data-filter="INACTIVE">Inactive / Draft</span>
+          </div>
 
-            <!-- Action 2: Manage Challenges -->
-            <a href="admin-challenges.html" class="action-card">
-              <div>
-                <div class="action-header">
-                  <div class="action-icon">📝</div>
-                  <div class="action-title">Challenge Repository</div>
-                </div>
-                <div class="action-desc">
-                  Create new assessments, edit category/duration settings, and toggle activation status for weekly challenges.
-                </div>
-              </div>
-              <div class="action-footer">
-                Manage Challenges →
-              </div>
-            </a>
-
-            <!-- Action 3: Manage Question Bank -->
-            <a href="admin-questions.html" class="action-card">
-              <div>
-                <div class="action-header">
-                  <div class="action-icon">❓</div>
-                  <div class="action-title">Question Bank</div>
-                </div>
-                <div class="action-desc">
-                  Add, edit, or organize multiple-choice questions, option parameters, correct answers, and detailed explanations.
-                </div>
-              </div>
-              <div class="action-footer">
-                Manage Questions →
-              </div>
-            </a>
-
-            <!-- Action 4: Monitor Attempts -->
-            <a href="admin-attempts.html" class="action-card">
-              <div>
-                <div class="action-header">
-                  <div class="action-icon">⏱️</div>
-                  <div class="action-title">Attempt Logs</div>
-                </div>
-                <div class="action-desc">
-                  Monitor live student submissions, inspect question-by-question response details, and track time spent.
-                </div>
-              </div>
-              <div class="action-footer">
-                View Attempt Logs →
-              </div>
-            </a>
-
-            <!-- Action 5: Leaderboard -->
-            <a href="admin-leaderboard.html" class="action-card">
-              <div>
-                <div class="action-header">
-                  <div class="action-icon">🏆</div>
-                  <div class="action-title">Platform Leaderboard</div>
-                </div>
-                <div class="action-desc">
-                  View deterministic student rankings based on total points earned, completed tests, and average accuracy.
-                </div>
-              </div>
-              <div class="action-footer">
-                View Leaderboard →
-              </div>
-            </a>
-
-            <!-- Action 6: Analytical Reports -->
-            <a href="admin-reports.html" class="action-card">
-              <div>
-                <div class="action-header">
-                  <div class="action-icon">📈</div>
-                  <div class="action-title">Analytical Reports</div>
-                </div>
-                <div class="action-desc">
-                  Examine detailed breakdown reports categorized by challenge, subject category, and difficulty tier.
-                </div>
-              </div>
-              <div class="action-footer">
-                View Reports →
-              </div>
-            </a>
+          <!-- Challenges Table -->
+          <div class="challenges-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Challenge Details</th>
+                  <th>Category &amp; Difficulty</th>
+                  <th>Schedule Window</th>
+                  <th>Duration</th>
+                  <th>Questions &amp; Points</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="challenges-table-body">
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                    Loading challenge repository...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </section>
 
@@ -500,7 +362,7 @@
 
   <!-- Footer -->
   <footer>
-    <p>Sunday Challenge Platform — Admin Management System (Stage 5 Active)</p>
+    <p>Sunday Challenge Platform — Admin Management System (Stage 5 Refined)</p>
   </footer>
 
   <!-- REST API Integration Script -->
@@ -523,27 +385,21 @@
       const userAvatar = document.getElementById('user-avatar');
       const rolePill = document.getElementById('role-pill');
 
-      const statStudents = document.getElementById('stat-total-students');
-      const statChallenges = document.getElementById('stat-total-challenges');
-      const statActiveChallenges = document.getElementById('stat-active-challenges');
-      const statQuestions = document.getElementById('stat-total-questions');
-      const statAttempts = document.getElementById('stat-total-attempts');
-      const statCompleted = document.getElementById('stat-completed-attempts');
-      const statInProgress = document.getElementById('stat-in-progress-attempts');
-      const statExpired = document.getElementById('stat-expired-attempts');
-      const statPoints = document.getElementById('stat-points-earned');
-      const statAverageScore = document.getElementById('stat-average-score');
-      const statCompletionRate = document.getElementById('stat-completion-rate');
+      const tableBody = document.getElementById('challenges-table-body');
+      const filterChips = document.querySelectorAll('.filter-chip');
 
       const logoutBtn = document.getElementById('logout-btn');
       const sidebarLogoutBtn = document.getElementById('sidebar-logout-btn');
+
+      let allChallenges = [];
+      let activeFilter = 'ALL';
 
       function formatDate(dateValue) {
         if (!dateValue) return 'N/A';
         try {
           const dateObj = new Date(dateValue);
           if (isNaN(dateObj.getTime())) return 'N/A';
-          return dateObj.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+          return dateObj.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         } catch (e) {
           return 'N/A';
         }
@@ -568,12 +424,9 @@
 
           const user = await profileRes.json();
 
-          // Role Verification Guard: If user is not ADMIN, reject access gracefully
           if (user.role !== 'ADMIN') {
             showError('Access Denied: You do not have administrator permissions to view this portal.');
-            setTimeout(() => {
-              window.location.href = 'student-dashboard.html';
-            }, 2500);
+            setTimeout(() => { window.location.href = 'student-dashboard.html'; }, 2500);
             return;
           }
 
@@ -595,38 +448,12 @@
             userAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'Admin')}&background=f43f5e&color=fff`;
           }
 
-          // 2. Fetch Authoritative Platform Statistics
-          const statsRes = await fetch(`${API_BASE_URL}/api/admin/stats`, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-            credentials: 'include'
-          });
-
-          if (statsRes.status === 403) {
-            showError('Access Denied: Admin authorization required (403 Forbidden).');
-            return;
-          }
-
-          if (statsRes.ok) {
-            const stats = await statsRes.json();
-            statStudents.textContent = stats.totalStudents || 0;
-            statChallenges.textContent = stats.totalChallenges || 0;
-            statActiveChallenges.textContent = `${stats.activeChallenges || 0} Active`;
-            statQuestions.textContent = stats.totalQuestions || 0;
-            statAttempts.textContent = stats.totalAttempts || 0;
-            statCompleted.textContent = stats.completedAttempts || 0;
-            statInProgress.textContent = stats.inProgressAttempts || 0;
-            statExpired.textContent = stats.expiredAttempts || 0;
-            statPoints.textContent = stats.totalPointsEarned || 0;
-            statAverageScore.textContent = `${stats.averageScore || 0}%`;
-            statCompletionRate.textContent = `${stats.completionRate || 0}%`;
-          } else {
-            showError(`Failed to load platform statistics (HTTP ${statsRes.status}).`);
-          }
+          // 2. Fetch Challenges List
+          await fetchChallenges();
 
         } catch (err) {
           console.error('Error loading admin dashboard:', err);
-          showError('Failed to load admin profile or statistics. Please try logging in again.');
+          showError('Failed to load admin profile or challenges. Please try logging in again.');
         } finally {
           if (loadingOverlay) {
             loadingOverlay.style.opacity = '0';
@@ -634,6 +461,146 @@
           }
         }
       }
+
+      async function fetchChallenges() {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/admin/challenges`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            credentials: 'include'
+          });
+
+          if (!res.ok) {
+            if (res.status === 403) {
+              showError('Access Denied: Admin authorization required (403 Forbidden).');
+              return;
+            }
+            throw new Error(`HTTP ${res.status}`);
+          }
+
+          allChallenges = await res.json();
+          renderChallenges();
+        } catch (e) {
+          console.error('Error fetching challenges:', e);
+          tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--accent-rose); padding: 2rem;">Failed to load challenge repository.</td></tr>`;
+        }
+      }
+
+      function renderChallenges() {
+        let filtered = allChallenges;
+        if (activeFilter !== 'ALL') {
+          filtered = allChallenges.filter(c => c.status === activeFilter);
+        }
+
+        if (!filtered || filtered.length === 0) {
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📭</div>
+                <div style="font-weight: 600; font-size: 1rem; color: var(--text-main);">No challenges found</div>
+                <div style="font-size: 0.85rem; margin-top: 0.25rem;">Click "+ Create Challenge" to create your first exam.</div>
+              </td>
+            </tr>`;
+          return;
+        }
+
+        tableBody.innerHTML = filtered.map(c => {
+          const statusClass = (c.status || 'INACTIVE').toLowerCase();
+          const startStr = c.startTime ? formatDate(c.startTime) : 'Immediate';
+          const endStr = c.endTime ? formatDate(c.endTime) : 'No Deadline';
+
+          return `
+            <tr>
+              <td>
+                <strong style="font-family: 'Outfit', sans-serif; font-size: 0.95rem; color: var(--text-main);">${c.title}</strong>
+                <div style="font-size: 0.8rem; color: var(--text-muted); max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  ${c.description || 'No description'}
+                </div>
+              </td>
+              <td>
+                <span class="badge-tag info" style="margin-bottom: 0.25rem; display: inline-block;">${c.category}</span>
+                <div>
+                  <span class="badge-tag ${c.difficulty === 'HARD' ? 'hard' : (c.difficulty === 'MEDIUM' ? 'medium' : 'easy')}">
+                    ${c.difficulty}
+                  </span>
+                </div>
+              </td>
+              <td style="font-size: 0.8rem; color: var(--text-muted);">
+                <div>🟢 <strong>Start:</strong> ${startStr}</div>
+                <div>🔴 <strong>End:</strong> ${endStr}</div>
+              </td>
+              <td>${c.durationMinutes} mins</td>
+              <td>
+                <div style="font-weight: 600;">${c.totalQuestions} questions</div>
+                <div style="font-weight: 700; color: var(--accent-cyan); font-size: 0.825rem;">${c.totalPoints} pts total</div>
+              </td>
+              <td>
+                <span class="status-badge ${statusClass}">
+                  ${c.status || (c.active ? 'ACTIVE' : 'INACTIVE')}
+                </span>
+              </td>
+              <td>
+                <div class="action-btns-group">
+                  <a href="admin-manage-questions.html?id=${c.id}" class="btn-xs btn-secondary" title="Manage Questions">
+                    👁️ Questions (${c.totalQuestions})
+                  </a>
+                  <a href="admin-create-challenge.html?id=${c.id}" class="btn-xs btn-secondary" title="Edit Challenge">
+                    ✏️ Edit
+                  </a>
+                  <button class="btn-xs btn-secondary toggle-status-btn" data-id="${c.id}" data-active="${c.active}" title="Toggle Active Status">
+                    ${c.active ? '⏸️ Deactivate' : '▶️ Activate'}
+                  </button>
+                  <a href="admin-attempts.html?challengeId=${c.id}" class="btn-xs btn-secondary" title="View Attempts">
+                    ⏱️ Attempts
+                  </a>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        // Attach event listeners for status toggle buttons
+        document.querySelectorAll('.toggle-status-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = e.target.getAttribute('data-id');
+            const currentActive = e.target.getAttribute('data-active') === 'true';
+            const newActive = !currentActive;
+
+            try {
+              const toggleRes = await fetch(`${API_BASE_URL}/api/admin/challenges/${id}/status?active=${newActive}`, {
+                method: 'POST',
+                credentials: 'include'
+              });
+              if (toggleRes.ok) {
+                await fetchChallenges();
+              } else {
+                // Fallback to PATCH if POST returns 405
+                const patchRes = await fetch(`${API_BASE_URL}/api/admin/challenges/${id}/status?active=${newActive}`, {
+                  method: 'PATCH',
+                  credentials: 'include'
+                });
+                if (patchRes.ok) {
+                  await fetchChallenges();
+                } else {
+                  alert('Failed to update challenge status.');
+                }
+              }
+            } catch (err) {
+              console.error(err);
+              alert('Error updating challenge status.');
+            }
+          });
+        });
+      }
+
+      filterChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          filterChips.forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          activeFilter = chip.getAttribute('data-filter');
+          renderChallenges();
+        });
+      });
 
       function showError(msg) {
         if (errorBanner && errorBannerText) {

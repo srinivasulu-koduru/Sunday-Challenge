@@ -1,6 +1,7 @@
 package com.sundaychallenge.entity;
 
 import com.sundaychallenge.entity.enums.Category;
+import com.sundaychallenge.entity.enums.ChallengeStatus;
 import com.sundaychallenge.entity.enums.Difficulty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,7 +17,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 /**
- * Challenge Entity representing an assessment exam/quiz.
+ * Challenge Entity representing an assessment exam/quiz with scheduling and lifecycle status.
  */
 @Entity
 @Table(name = "challenges")
@@ -52,6 +53,16 @@ public class Challenge {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
+    @Column(name = "start_time")
+    private LocalDateTime startTime;
+
+    @Column(name = "end_time")
+    private LocalDateTime endTime;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private ChallengeStatus status;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -73,6 +84,42 @@ public class Challenge {
         this.totalQuestions = totalQuestions;
         this.totalPoints = totalPoints;
         this.active = active;
+        this.status = active ? ChallengeStatus.ACTIVE : ChallengeStatus.INACTIVE;
+    }
+
+    public Challenge(String title, String description, Category category, Difficulty difficulty,
+                     Integer durationMinutes, Integer totalQuestions, Integer totalPoints, boolean active,
+                     LocalDateTime startTime, LocalDateTime endTime, ChallengeStatus status) {
+        this.title = title;
+        this.description = description;
+        this.category = category;
+        this.difficulty = difficulty;
+        this.durationMinutes = durationMinutes;
+        this.totalQuestions = totalQuestions;
+        this.totalPoints = totalPoints;
+        this.active = active;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.status = status;
+    }
+
+    /**
+     * Authoritative calculation of challenge lifecycle status based on active flag and server time window.
+     */
+    public ChallengeStatus resolveStatus(LocalDateTime now) {
+        if (!active) {
+            return ChallengeStatus.INACTIVE;
+        }
+        if (status == ChallengeStatus.DRAFT) {
+            return ChallengeStatus.DRAFT;
+        }
+        if (startTime != null && now.isBefore(startTime)) {
+            return ChallengeStatus.UPCOMING;
+        }
+        if (endTime != null && now.isAfter(endTime)) {
+            return ChallengeStatus.COMPLETED;
+        }
+        return ChallengeStatus.ACTIVE;
     }
 
     public Long getId() {
@@ -145,6 +192,30 @@ public class Challenge {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
+    }
+
+    public ChallengeStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(ChallengeStatus status) {
+        this.status = status;
     }
 
     public LocalDateTime getCreatedAt() {

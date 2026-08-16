@@ -1,7 +1,11 @@
 package com.sundaychallenge.controller;
 
+import com.sundaychallenge.dto.AdminChallengeDetailsResponse;
 import com.sundaychallenge.dto.AdminChallengeRequest;
 import com.sundaychallenge.dto.AdminChallengeResponse;
+import com.sundaychallenge.dto.AdminQuestionRequest;
+import com.sundaychallenge.dto.AdminQuestionResponse;
+import com.sundaychallenge.dto.SaveChallengeWithQuestionsRequest;
 import com.sundaychallenge.entity.Role;
 import com.sundaychallenge.entity.User;
 import com.sundaychallenge.service.AdminService;
@@ -25,7 +29,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 /**
- * Controller for admin challenge management.
+ * Controller for admin challenge management, scheduling, and embedded question bank control.
  */
 @RestController
 @RequestMapping("/api/admin/challenges")
@@ -56,11 +60,25 @@ public class AdminChallengeController {
         return ResponseEntity.ok(adminService.getAllChallenges());
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<AdminChallengeDetailsResponse> getChallengeDetails(@PathVariable("id") Long id,
+                                                                              @AuthenticationPrincipal OAuth2User oauth2User) {
+        verifyAdmin(oauth2User);
+        return ResponseEntity.ok(adminService.getChallengeDetailsWithQuestions(id));
+    }
+
     @PostMapping
     public ResponseEntity<AdminChallengeResponse> createChallenge(@RequestBody AdminChallengeRequest request,
                                                                  @AuthenticationPrincipal OAuth2User oauth2User) {
         verifyAdmin(oauth2User);
         return ResponseEntity.status(HttpStatus.CREATED).body(adminService.createChallenge(request));
+    }
+
+    @PostMapping("/full")
+    public ResponseEntity<AdminChallengeDetailsResponse> createChallengeWithQuestions(@RequestBody SaveChallengeWithQuestionsRequest request,
+                                                                                        @AuthenticationPrincipal OAuth2User oauth2User) {
+        verifyAdmin(oauth2User);
+        return ResponseEntity.status(HttpStatus.CREATED).body(adminService.createChallengeWithQuestions(request));
     }
 
     @PutMapping("/{id}")
@@ -69,6 +87,22 @@ public class AdminChallengeController {
                                                                  @AuthenticationPrincipal OAuth2User oauth2User) {
         verifyAdmin(oauth2User);
         return ResponseEntity.ok(adminService.updateChallenge(id, request));
+    }
+
+    @PutMapping("/{id}/full")
+    public ResponseEntity<AdminChallengeDetailsResponse> updateChallengeWithQuestions(@PathVariable("id") Long id,
+                                                                                        @RequestBody SaveChallengeWithQuestionsRequest request,
+                                                                                        @AuthenticationPrincipal OAuth2User oauth2User) {
+        verifyAdmin(oauth2User);
+        return ResponseEntity.ok(adminService.updateChallengeWithQuestions(id, request));
+    }
+
+    @PostMapping("/{id}/status")
+    public ResponseEntity<AdminChallengeResponse> toggleChallengeStatusPost(@PathVariable("id") Long id,
+                                                                            @RequestParam("active") boolean active,
+                                                                            @AuthenticationPrincipal OAuth2User oauth2User) {
+        verifyAdmin(oauth2User);
+        return ResponseEntity.ok(adminService.toggleChallengeStatus(id, active));
     }
 
     @PatchMapping("/{id}/status")
@@ -85,5 +119,20 @@ public class AdminChallengeController {
         verifyAdmin(oauth2User);
         adminService.deleteChallenge(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/questions")
+    public ResponseEntity<List<AdminQuestionResponse>> getQuestionsForChallenge(@PathVariable("id") Long id,
+                                                                                  @AuthenticationPrincipal OAuth2User oauth2User) {
+        verifyAdmin(oauth2User);
+        return ResponseEntity.ok(adminService.getQuestionsForChallenge(id));
+    }
+
+    @PostMapping("/{id}/questions")
+    public ResponseEntity<AdminQuestionResponse> addQuestionToChallenge(@PathVariable("id") Long id,
+                                                                          @RequestBody AdminQuestionRequest request,
+                                                                          @AuthenticationPrincipal OAuth2User oauth2User) {
+        verifyAdmin(oauth2User);
+        return ResponseEntity.status(HttpStatus.CREATED).body(adminService.addQuestionToChallenge(id, request, null));
     }
 }

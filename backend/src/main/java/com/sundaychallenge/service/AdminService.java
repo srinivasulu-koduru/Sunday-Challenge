@@ -2,6 +2,7 @@ package com.sundaychallenge.service;
 
 import com.sundaychallenge.dto.AdminAttemptDetailsResponse;
 import com.sundaychallenge.dto.AdminAttemptResponse;
+import com.sundaychallenge.dto.AdminChallengeDetailsResponse;
 import com.sundaychallenge.dto.AdminChallengeRequest;
 import com.sundaychallenge.dto.AdminChallengeResponse;
 import com.sundaychallenge.dto.AdminQuestionRequest;
@@ -14,6 +15,7 @@ import com.sundaychallenge.dto.CategoryReportResponse;
 import com.sundaychallenge.dto.ChallengeReportResponse;
 import com.sundaychallenge.dto.DifficultyReportResponse;
 import com.sundaychallenge.dto.LeaderboardEntryResponse;
+import com.sundaychallenge.dto.SaveChallengeWithQuestionsRequest;
 import com.sundaychallenge.dto.UserAttemptSummaryResponse;
 import com.sundaychallenge.entity.Attempt;
 import com.sundaychallenge.entity.Challenge;
@@ -23,6 +25,7 @@ import com.sundaychallenge.entity.Role;
 import com.sundaychallenge.entity.User;
 import com.sundaychallenge.entity.enums.AttemptStatus;
 import com.sundaychallenge.entity.enums.Category;
+import com.sundaychallenge.entity.enums.ChallengeStatus;
 import com.sundaychallenge.entity.enums.Difficulty;
 import com.sundaychallenge.repository.AttemptAnswerRepository;
 import com.sundaychallenge.repository.AttemptRepository;
@@ -45,8 +48,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Service handling all administrative operations, platform statistics, entity management,
- * safety checks, leaderboard generation, and analytical reporting.
+ * Service handling administrative operations, platform management, challenge scheduling,
+ * question configuration, safety checks, leaderboard generation, and analytical reporting.
  */
 @Service
 public class AdminService {
@@ -77,9 +80,6 @@ public class AdminService {
         this.challengeService = challengeService;
     }
 
-    /**
-     * Calculates real-time platform statistics.
-     */
     @Transactional(readOnly = true)
     public AdminStatsResponse getAdminStats() {
         long totalStudents = userRepository.countByRole(Role.STUDENT);
@@ -130,32 +130,37 @@ public class AdminService {
     }
 
     // =========================================================================
-    // CHALLENGE MANAGEMENT
+    // CHALLENGE MANAGEMENT & SCHEDULING
     // =========================================================================
 
     @Transactional(readOnly = true)
     public List<AdminChallengeResponse> getAllChallenges() {
         return challengeRepository.findAll().stream()
                 .map(AdminChallengeResponse::fromEntity)
+                .sorted(Comparator.comparing(AdminChallengeResponse::id).reversed())
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public AdminChallengeDetailsResponse getChallengeDetailsWithQuestions(Long id) {
+        Challenge challenge = challengeRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Challenge not found"));
+
+        List<ChallengeQuestion> cqList = challengeQuestionRepository.findByChallengeIdOrderByQuestionOrderAsc(id);
+        List<AdminQuestionResponse> questions = cqList.stream()
+                .map(cq -> AdminQuestionResponse.fromEntity(cq.getQuestion(), challenge.getId(), challenge.getTitle()))
+                .toList();
+
+        return new AdminChallengeDetailsResponse(AdminChallengeResponse.fromEntity(challenge), questions);
     }
 
     @Transactional
     public AdminChallengeResponse createChallenge(AdminChallengeRequest request) {
-        if (request == null || request.title() == null || request.title().trim().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Challenge title is required");
-        }
-        if (request.durationMinutes() == null || request.durationMinutes() <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Duration must be greater than 0 minutes");
-        }
-        if (request.category() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category is required");
-        }
-        if (request.difficulty() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Difficulty is required");
-        }
+        validateChallengeRequest(request);
 
         boolean active = request.active() != null ? request.active() : true;
+        ChallengeStatus status = request.status() != null ? request.status() : (active ? ChallengeStatus.ACTIVE : ChallengeStatus.INACTIVE);
+
         Challenge challenge = new Challenge(
                 request.title().trim(),
                 request.description() != null ? request.description().trim() : "",
@@ -164,10 +169,14 @@ public class AdminService {
                 request.durationMinutes(),
                 0,
                 0,
-                active
+                active,
+                request.startTime(),
+                request.endTime(),
+                status
         );
+
         challenge = challengeRepository.save(challenge);
-        log.info("[ADMIN] Created challenge ID: {}, Title: {}", challenge.getId(), challenge.getTitle());
+        log.info("[ADMIN] Created challenge ID: {}, Title: {}, Schedule: {} to {}", challenge.getId(), challenge.getTitle(), challenge.getStartTime(), challenge.getEndTime());
         return AdminChallengeResponse.fromEntity(challenge);
     }
 
@@ -194,6 +203,15 @@ public class AdminService {
         if (request.active() != null) {
             challenge.setActive(request.active());
         }
+        if (request.startTime() != null) {
+            challenge.setStartTime(request.startTime());
+        }
+        if (request.endTime() != null) {
+            challenge.setEndTime(request.endTime());
+        }
+        if (request.status() != null) {
+            challenge.setStatus(request.status());
+        }
 
         challenge = challengeRepository.save(challenge);
         log.info("[ADMIN] Updated challenge ID: {}", id);
@@ -201,10 +219,56 @@ public class AdminService {
     }
 
     @Transactional
+    public AdminChallengeDetailsResponse createChallengeWithQuestions(SaveChallengeWithQuestionsRequest request) {
+        if (request == null || request.challenge() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Challenge configuration is required");
+        }
+
+        AdminChallengeResponse challengeResp = createChallenge(request.challenge());
+        Long challengeId = challengeResp.id();
+
+        if (request.questions() != null && !request.questions().isEmpty()) {
+            int order = 1;
+            for (AdminQuestionRequest qReq : request.questions()) {
+                addQuestionToChallenge(challengeId, qReq, order++);
+            }
+        }
+
+        return getChallengeDetailsWithQuestions(challengeId);
+    }
+
+    @Transactional
+    public AdminChallengeDetailsResponse updateChallengeWithQuestions(Long id, SaveChallengeWithQuestionsRequest request) {
+        if (request == null || request.challenge() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Challenge configuration is required");
+        }
+
+        updateChallenge(id, request.challenge());
+
+        if (request.questions() != null) {
+            // Remove old links and save updated question list
+            List<ChallengeQuestion> existingCq = challengeQuestionRepository.findByChallengeIdOrderByQuestionOrderAsc(id);
+            challengeQuestionRepository.deleteAll(existingCq);
+
+            int order = 1;
+            for (AdminQuestionRequest qReq : request.questions()) {
+                addQuestionToChallenge(id, qReq, order++);
+            }
+        }
+
+        return getChallengeDetailsWithQuestions(id);
+    }
+
+    @Transactional
     public AdminChallengeResponse toggleChallengeStatus(Long id, boolean active) {
         Challenge challenge = challengeRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Challenge not found"));
         challenge.setActive(active);
+        if (!active) {
+            challenge.setStatus(ChallengeStatus.INACTIVE);
+        } else {
+            challenge.setStatus(ChallengeStatus.ACTIVE);
+        }
         challenge = challengeRepository.save(challenge);
         log.info("[ADMIN] Toggled active status of challenge ID: {} to {}", id, active);
         return AdminChallengeResponse.fromEntity(challenge);
@@ -215,7 +279,6 @@ public class AdminService {
         Challenge challenge = challengeRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Challenge not found"));
 
-        // SAFE DELETION GUARD: If challenge has existing student attempts, reject deletion
         if (attemptRepository.existsByChallengeId(id)) {
             log.warn("[ADMIN] Rejecting deletion of challenge ID: {} because student attempts exist.", id);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -229,8 +292,19 @@ public class AdminService {
     }
 
     // =========================================================================
-    // QUESTION MANAGEMENT
+    // EMBEDDED QUESTION MANAGEMENT
     // =========================================================================
+
+    @Transactional(readOnly = true)
+    public List<AdminQuestionResponse> getQuestionsForChallenge(Long challengeId) {
+        Challenge challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Challenge not found"));
+
+        List<ChallengeQuestion> cqList = challengeQuestionRepository.findByChallengeIdOrderByQuestionOrderAsc(challengeId);
+        return cqList.stream()
+                .map(cq -> AdminQuestionResponse.fromEntity(cq.getQuestion(), challenge.getId(), challenge.getTitle()))
+                .toList();
+    }
 
     @Transactional(readOnly = true)
     public List<AdminQuestionResponse> getAllQuestions() {
@@ -251,6 +325,18 @@ public class AdminService {
 
     @Transactional
     public AdminQuestionResponse createQuestion(AdminQuestionRequest request) {
+        if (request.challengeId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Challenge ID is required for adding questions");
+        }
+        int nextOrder = challengeQuestionRepository.findByChallengeIdOrderByQuestionOrderAsc(request.challengeId()).size() + 1;
+        return addQuestionToChallenge(request.challengeId(), request, nextOrder);
+    }
+
+    @Transactional
+    public AdminQuestionResponse addQuestionToChallenge(Long challengeId, AdminQuestionRequest request, Integer questionOrder) {
+        Challenge challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Challenge not found"));
+
         validateQuestionRequest(request);
 
         Question question = new Question(
@@ -265,23 +351,12 @@ public class AdminService {
         );
         question = questionRepository.save(question);
 
-        Long challengeId = null;
-        String challengeTitle = null;
+        int order = questionOrder != null ? questionOrder : (challengeQuestionRepository.findByChallengeIdOrderByQuestionOrderAsc(challengeId).size() + 1);
+        challengeQuestionRepository.save(new ChallengeQuestion(challenge, question, order));
 
-        if (request.challengeId() != null) {
-            Challenge challenge = challengeRepository.findById(request.challengeId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Challenge not found for linking"));
-            
-            int nextOrder = challengeQuestionRepository.findByChallengeIdOrderByQuestionOrderAsc(challenge.getId()).size() + 1;
-            challengeQuestionRepository.save(new ChallengeQuestion(challenge, question, nextOrder));
-            
-            recalculateChallengeTotals(challenge.getId());
-            challengeId = challenge.getId();
-            challengeTitle = challenge.getTitle();
-        }
-
-        log.info("[ADMIN] Created question ID: {}", question.getId());
-        return AdminQuestionResponse.fromEntity(question, challengeId, challengeTitle);
+        recalculateChallengeTotals(challengeId);
+        log.info("[ADMIN] Added question ID: {} to challenge ID: {}", question.getId(), challengeId);
+        return AdminQuestionResponse.fromEntity(question, challenge.getId(), challenge.getTitle());
     }
 
     @Transactional
@@ -323,7 +398,6 @@ public class AdminService {
         Question question = questionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found"));
 
-        // SAFE DELETION GUARD: Check if question is referenced in student attempt answers
         if (attemptAnswerRepository.existsByQuestionId(id)) {
             log.warn("[ADMIN] Rejecting deletion of question ID: {} because student attempt answers reference it.", id);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -347,6 +421,24 @@ public class AdminService {
         }
 
         log.info("[ADMIN] Safely deleted question ID: {}", id);
+    }
+
+    private void validateChallengeRequest(AdminChallengeRequest request) {
+        if (request == null || request.title() == null || request.title().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Challenge title is required");
+        }
+        if (request.durationMinutes() == null || request.durationMinutes() <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Duration must be greater than 0 minutes");
+        }
+        if (request.category() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category is required");
+        }
+        if (request.difficulty() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Difficulty is required");
+        }
+        if (request.startTime() != null && request.endTime() != null && request.endTime().isBefore(request.startTime())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End time cannot be earlier than start time");
+        }
     }
 
     private void validateQuestionRequest(AdminQuestionRequest request) {
@@ -493,7 +585,7 @@ public class AdminService {
     }
 
     // =========================================================================
-    // ATTEMPT MANAGEMENT
+    // ATTEMPT MANAGEMENT & SEARCH
     // =========================================================================
 
     @Transactional(readOnly = true)
@@ -506,7 +598,11 @@ public class AdminService {
         }
         if (username != null && !username.trim().isEmpty()) {
             String uLower = username.trim().toLowerCase();
-            list = list.stream().filter(a -> a.getUser().getUsername() != null && a.getUser().getUsername().toLowerCase().contains(uLower)).toList();
+            list = list.stream().filter(a -> (a.getUser().getUsername() != null && a.getUser().getUsername().toLowerCase().contains(uLower)) ||
+                                             (a.getUser().getName() != null && a.getUser().getName().toLowerCase().contains(uLower)) ||
+                                             (a.getUser().getEmail() != null && a.getUser().getEmail().toLowerCase().contains(uLower)) ||
+                                             (a.getChallenge().getTitle() != null && a.getChallenge().getTitle().toLowerCase().contains(uLower)) ||
+                                             String.valueOf(a.getId()).equals(uLower)).toList();
         }
         if (challengeId != null) {
             list = list.stream().filter(a -> a.getChallenge().getId().equals(challengeId)).toList();
@@ -628,7 +724,6 @@ public class AdminService {
             ));
         }
 
-        // DETERMINISTIC RANKING: Total Points DESC -> Completed Challenges DESC -> Avg Score DESC -> Username ASC
         rawList.sort(Comparator
                 .comparing(LeaderboardEntryResponse::totalPoints).reversed()
                 .thenComparing(Comparator.comparing(LeaderboardEntryResponse::completedChallenges).reversed())
